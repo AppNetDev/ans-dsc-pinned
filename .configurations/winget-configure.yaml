@@ -40,8 +40,14 @@ properties:
           }
 
           # Try local repo first (when running from a cloned copy); fall back to GitHub download.
-          $localRoot = Split-Path $PWD.Path -Parent
-          if (Test-Path (Join-Path $localRoot 'Pinned.psd1')) {
+          $localRoot = @(
+              $PWD.Path,
+              (Split-Path $PWD.Path -Parent)
+          ) | Where-Object {
+              $_ -and (Test-Path (Join-Path $_ 'Pinned.psd1'))
+          } | Select-Object -First 1
+
+          if ($localRoot) {
               foreach ($dest in $destinations) {
                   Copy-PinnedModule -Source $localRoot -Destination $dest
               }
