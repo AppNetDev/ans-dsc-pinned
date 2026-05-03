@@ -12,7 +12,7 @@ properties:
           @{ Result = if ($mod) { $mod.Version.ToString() } else { '' } }
         TestScript: |
           $mod = Get-Module -ListAvailable -Name Pinned | Sort-Object Version -Descending | Select-Object -First 1
-          $mod -and ($mod.Version -ge [version]'4.0.1')
+          $mod -and ($mod.Version -ge [version]'4.0.2')
         SetScript: |
           $dest = "$env:ProgramFiles\WindowsPowerShell\Modules\Pinned"
           # Try local repo first (when running from a cloned copy); fall back to GitHub download.

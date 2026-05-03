@@ -148,7 +148,7 @@ Function Test-TargetResource {
         [Bool]   $NoRestart = $False,
         [String] $Version,
         [Bool]   $ForceVersion = $False,
-        [Bool]   $PatchOnly = $True,
+        [Bool]   $PatchOnly = $False,
         [Bool]   $UseSemVer = $False,
         [String] $Arguments,
         [String] $ArgumentsForUninstall,
@@ -779,7 +779,7 @@ Function Get-InstalledProgram {
         [String] $ProductId,
 
         [Switch] $Wow64,
-        [Switch] $FallbackToWow64 = $True
+        [Bool] $FallbackToWow64 = $True
     )
 
     Switch ($Wow64) {

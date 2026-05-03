@@ -26,7 +26,23 @@ winget @wingetArgs
 
 See [`.configurations/winget-configure.yaml`](.configurations/winget-configure.yaml) to customise which applications are installed.
 
-### Option 2 — Manual
+### Option 2 — NuGet package (restricted)
+
+The module is published to the [AppNetOnline GitHub Packages](https://github.com/orgs/AppNetOnline/packages) NuGet feed. Access requires a GitHub personal access token with `read:packages` scope — contact [@Sir-Jigston](https://github.com/Sir-Jigston) to request access.
+
+Requires `Microsoft.PowerShell.PSResourceGet` (included with PowerShell 7.4+):
+
+```powershell
+$Cred = Get-Credential -UserName 'your-github-username' -Message 'Enter your read:packages PAT as the password'
+
+Register-PSResourceRepository -Name 'AppNetOnline' `
+    -Uri 'https://nuget.pkg.github.com/AppNetOnline/index.json' `
+    -Trusted
+
+Install-PSResource -Name Pinned -Repository 'AppNetOnline' -Credential $Cred -TrustRepository
+```
+
+### Option 3 — Manual
 
 Copy the `Pinned` folder (containing `Pinned.psd1` and `DSCResources\`) into a PSModulePath location:
 
@@ -137,6 +153,25 @@ App Chrome {
     Version               = '124.0.6367.82'
     InstalledCheckFilePath = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
     Arguments             = '/silent /install'
+}
+```
+
+## PatchOnly
+
+When `PatchOnly = $true`, the resource skips installation entirely if the application is not already present on the machine — it only enforces the version on existing installs. This is useful in scenarios where you want to update an app across a fleet but never perform a first-time install (e.g. the app is optional and some machines legitimately don't have it).
+
+**Requirements:**
+- The application must already be installed for any action to be taken
+- `PatchOnly` is `$false` by default — omit it for normal install + enforce behaviour
+- Combine with `Version` to upgrade in-place without triggering installs on machines that don't have the app
+
+```powershell
+App Chrome {
+    Ensure        = 'Present'
+    Name          = 'Google Chrome'
+    InstallerPath = '\\share\Chrome\126.0.0.0\ChromeSetup.exe'
+    Version       = '126.0.0.0'
+    PatchOnly     = $true   # skip machines where Chrome is not installed
 }
 ```
 

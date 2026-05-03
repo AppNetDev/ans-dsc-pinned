@@ -1,5 +1,5 @@
 @{
-    ModuleVersion        = '4.0.1'
+    ModuleVersion        = '4.0.2'
     GUID                 = 'a39e5014-b98f-4df3-ac52-feda586babe8'
     Author               = 'Jarod Roberts (github.com/Sir-Jigston)'
     CompanyName          = ''

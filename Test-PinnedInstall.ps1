@@ -43,7 +43,7 @@ Write-Host "==> Checking DSC resource availability..."
 $resource = Get-DscResource -Module Pinned -Name App -ErrorAction SilentlyContinue
 if ($resource) {
     Write-Host "    [PASS] DSC resource 'Pinned/App' loaded successfully."
-    Write-Host "    Properties: $(($resource.Properties.Name) -join ', ')"
+    Write-Host "    Property count: $($resource.Properties.Count)"
 }
 else {
     Write-Error "[FAIL] DSC resource 'Pinned/App' was not found after import."
