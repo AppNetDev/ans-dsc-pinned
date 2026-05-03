@@ -11,6 +11,5 @@ properties:
         description: Remove Notepad++ if it's at the pinned version
         Ensure: Absent
         Name: Notepad++ (64-bit x64)
-        Version: 8.9.4
 
   configurationVersion: 0.2.0
