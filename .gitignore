@@ -1,0 +1,18 @@
+# Claude Code
+.claude/settings.local.json
+.claude/todos/
+
+# PowerShell / DSC build artifacts
+*.ps1xml
+MOF/
+*.mof
+
+# Windows
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Temp / editors
+*.tmp
+*.bak
+*.swp
