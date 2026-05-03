@@ -6,6 +6,7 @@
 *.ps1xml
 MOF/
 *.mof
+!Pinned/DSCResources/**/*.mof
 run.ps1
 publish.ps1
 Install-Pinned.ps1

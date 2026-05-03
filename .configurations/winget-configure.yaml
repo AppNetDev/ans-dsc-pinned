@@ -41,8 +41,9 @@ properties:
 
           # Try local repo first (when running from a cloned copy); fall back to GitHub download.
           $localRoot = @(
-              $PWD.Path,
-              (Split-Path $PWD.Path -Parent)
+              (Join-Path $PWD.Path 'Pinned'),
+              (Join-Path (Split-Path $PWD.Path -Parent) 'Pinned'),
+              $PWD.Path
           ) | Where-Object {
               $_ -and (Test-Path (Join-Path $_ 'Pinned.psd1'))
           } | Select-Object -First 1
@@ -59,8 +60,9 @@ properties:
               if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force }
               Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force
               $root = Get-ChildItem $tempDir -Directory | Select-Object -First 1
+              $moduleRoot = Join-Path $root.FullName 'Pinned'
               foreach ($dest in $destinations) {
-                  Copy-PinnedModule -Source $root.FullName -Destination $dest
+                  Copy-PinnedModule -Source $moduleRoot -Destination $dest
               }
               Remove-Item $tempZip, $tempDir -Recurse -Force -ErrorAction SilentlyContinue
           }

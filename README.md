@@ -50,11 +50,9 @@ Copy the `Pinned` folder (containing `Pinned.psd1` and `DSCResources\`) into a P
 Copy-Item -Recurse .\Pinned 'C:\Program Files\WindowsPowerShell\Modules\'
 ```
 
-Or run the included helper script (requires the repo to be cloned locally):
+## Repository Layout
 
-```powershell
-.\Test-PinnedInstall.ps1
-```
+The PowerShell module lives in [`Pinned/`](Pinned/). Repository-level files such as `.configurations/`, `README.md`, and local helper scripts are not part of the published module package.
 
 ## Usage
 
