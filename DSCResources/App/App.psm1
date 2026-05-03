@@ -796,11 +796,11 @@ Function Get-InstalledProgram {
     $InstalledPrograms = @()
     $InstalledPrograms += Get-ChildItem -LiteralPath $UninstallRegMachine |
         ForEach-Object { Get-ItemProperty -LiteralPath $_.PSPath } |
-        Where-Object { $_.DisplayName }
+        Where-Object { $_.PSObject.Properties['DisplayName'] -and $_.DisplayName }
     If (Test-Path $UninstallRegUser) {
         $InstalledPrograms += Get-ChildItem -LiteralPath $UninstallRegUser |
             ForEach-Object { Get-ItemProperty -LiteralPath $_.PSPath } |
-            Where-Object { $_.DisplayName }
+            Where-Object { $_.PSObject.Properties['DisplayName'] -and $_.DisplayName }
     }
 
     $Program = $Null
