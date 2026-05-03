@@ -1,15 +1,16 @@
 # yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
-# Requires the Pinned module to be installed first:
-#   .\Test-PinnedInstall.ps1
-#   -- or --
-#   winget configure --file "https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/master/.configurations/winget-configure.yaml" --accept-configuration-agreements
+# Requires the Pinned module to be installed first
 properties:
   resources:
     - resource: Pinned/App
       id: RemoveNotepadPlusPlus
       directives:
-        description: Remove Notepad++ if it's at the pinned version
+        description: Uninstall Notepad++ from the system
+      settings:
         Ensure: Absent
         Name: Notepad++ (64-bit x64)
+        InstallerPath: ''
+        UseUninstallString: true
+        ArgumentsForUninstall: /S
 
   configurationVersion: 0.2.0
