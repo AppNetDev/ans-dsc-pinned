@@ -1,0 +1,33 @@
+[ClassVersion("4.0.0"),FriendlyName("App")]
+Class App: OMI_BaseResource
+{
+  [write,ValueMap{"Present","Absent"},Values{"Present","Absent"}] string Ensure;
+  [Key] string Name;
+  [required] string InstallerPath;
+  [write] string ProductId;
+  [write] string InstalledCheckFilePath;
+  [write] string InstalledCheckScript;
+  [write] boolean NoRestart;
+  [write] string Arguments;
+  [write] string ArgumentsForUninstall;
+  [write] string WorkingDirectory;
+  [write] boolean UseUninstallString;
+  [write,EmbeddedInstance("MSFT_Credential")] string Credential;
+  [write] uint32 ReturnCode[];
+  [write] uint32 ProcessTimeout;
+  [write] uint32 DownloadTimeout;
+  [write] string Version;
+  [write] boolean PatchOnly;
+  [write] boolean ForceVersion;
+  [write] boolean UseSemVer;
+  [read] string Publisher;
+  [read] string UninstallString;
+  [read] boolean Installed;
+  [write] string FileHash;
+  [write,ValueMap{"SHA1","SHA256","SHA384","SHA512","MD5","RIPEMD160"},Values{"SHA1","SHA256","SHA384","SHA512","MD5","RIPEMD160"}] string HashAlgorithm;
+  [write] string PreAction;
+  [write] string PostAction;
+  [write] string PreCopyFrom;
+  [write] string PreCopyTo;
+  [write,ValueMap{"None","Minimal","Moderate","All"},Values{"None","Minimal","Moderate","All"}] string LogLevel;
+};
