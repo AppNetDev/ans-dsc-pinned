@@ -10,10 +10,34 @@ A PowerShell DSC resource that enforces Windows desktop applications at an exact
 
 ## Installation
 
+### Option 1 — winget configure (recommended)
+
+Installs the Pinned module and applies your app configuration in one step using [winget configure](https://learn.microsoft.com/en-us/windows/package-manager/configuration/):
+
+```powershell
+$wingetArgs = @(
+    'configure'
+    '--file', 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/master/.configurations/winget-configure.yaml'
+    '--accept-configuration-agreements'
+    '--verbose-logs'
+)
+winget @wingetArgs
+```
+
+See [`.configurations/winget-configure.yaml`](.configurations/winget-configure.yaml) to customise which applications are installed.
+
+### Option 2 — Manual
+
 Copy the `Pinned` folder (containing `Pinned.psd1` and `DSCResources\`) into a PSModulePath location:
 
 ```powershell
 Copy-Item -Recurse .\Pinned 'C:\Program Files\WindowsPowerShell\Modules\'
+```
+
+Or run the included helper script (requires the repo to be cloned locally):
+
+```powershell
+.\Test-PinnedInstall.ps1
 ```
 
 ## Usage
