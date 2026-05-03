@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=https://aka.ms/configuration-dsc-schema/0.2
+properties:
+  resources:
+    - resource: PSDscResources/Script
+      id: InstallPinnedModule
+      directives:
+        description: Install the Pinned DSC module from GitHub
+        allowPrerelease: true
+      settings:
+        GetScript: |
+          $mod = Get-Module -ListAvailable -Name Pinned | Sort-Object Version -Descending | Select-Object -First 1
+          @{ Result = if ($mod) { $mod.Version.ToString() } else { '' } }
+        TestScript: |
+          $mod = Get-Module -ListAvailable -Name Pinned | Sort-Object Version -Descending | Select-Object -First 1
+          $mod -and ($mod.Version -ge [version]'4.0.0')
+        SetScript: |
+          $dest = "$env:ProgramFiles\WindowsPowerShell\Modules\Pinned"
+          # Try local repo first (when running from a cloned copy); fall back to GitHub download.
+          $localRoot = Split-Path $PWD.Path -Parent
+          if (Test-Path (Join-Path $localRoot 'Pinned.psd1')) {
+              if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
+              New-Item -ItemType Directory -Path $dest -Force | Out-Null
+              Get-ChildItem $localRoot -Exclude '.git','*.ps1','*.yaml','*.yml','README.md' |
+                  Copy-Item -Destination $dest -Recurse -Force
+          } else {
+              $url     = 'https://github.com/AppNetOnline/ans-dsc-pinned/archive/refs/heads/master.zip'
+              $tempZip = Join-Path $env:TEMP 'ans-dsc-pinned.zip'
+              $tempDir = Join-Path $env:TEMP 'ans-dsc-pinned-extract'
+              Invoke-WebRequest -Uri $url -OutFile $tempZip -UseBasicParsing
+              if (Test-Path $tempDir) { Remove-Item $tempDir -Recurse -Force }
+              Expand-Archive -Path $tempZip -DestinationPath $tempDir -Force
+              $root = Get-ChildItem $tempDir -Directory | Select-Object -First 1
+              if (Test-Path $dest) { Remove-Item $dest -Recurse -Force }
+              New-Item -ItemType Directory -Path $dest -Force | Out-Null
+              Get-ChildItem $root.FullName | Copy-Item -Destination $dest -Recurse -Force
+              Remove-Item $tempZip, $tempDir -Recurse -Force -ErrorAction SilentlyContinue
+          }
+
+    - resource: Pinned/App
+      id: Install7Zip
+      dependsOn:
+        - InstallPinnedModule
+      directives:
+        description: Install 7-Zip at an exact pinned version
+      settings:
+        Ensure: Present
+        Name: 7-Zip 24.08 (x64)
+        InstallerPath: https://www.7-zip.org/a/7z2408-x64.msi
+        Version: 24.8.0.0
+        Arguments: /quiet /norestart
+
+  configurationVersion: 0.2.0
