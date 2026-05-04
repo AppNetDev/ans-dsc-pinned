@@ -38,6 +38,11 @@ function Install-PinnedDscV3ResourceFromUrl {
         $uri = '{0}/{1}' -f $BaseUri.TrimEnd('/'), $fileName
         $path = Join-Path $Destination $fileName
         Invoke-WebRequest -Uri $uri -OutFile $path -UseBasicParsing
+
+        $file = Get-Item -LiteralPath $path -ErrorAction Stop
+        if ($file.Length -eq 0) {
+            throw "Downloaded '$uri' to '$path', but the file is empty."
+        }
     }
 }
 
@@ -64,6 +69,13 @@ $resolvedResourcePath = (Resolve-Path -LiteralPath $ResourcePath).Path
 $env:DSC_RESOURCE_PATH = $resolvedResourcePath
 
 Invoke-WebRequest -Uri $ConfigurationUri -OutFile $DestinationPath -UseBasicParsing
+
+$configFile = Get-Item -LiteralPath $DestinationPath -ErrorAction Stop
+if ($configFile.Length -eq 0) {
+    throw "Downloaded '$ConfigurationUri' to '$DestinationPath', but the file is empty."
+}
+
+dsc resource list AppNetOnline.Pinned/App | Out-String | Write-Verbose
 
 $dscArgs = @(
     'config'
