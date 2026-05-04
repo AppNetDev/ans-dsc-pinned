@@ -19,6 +19,14 @@
     "implementsPretest": true,
     "return": "state"
   },
+  "test": {
+    "executable": "Pinned.App.cmd",
+    "args": [
+      "test"
+    ],
+    "input": "stdin",
+    "return": "state"
+  },
   "schema": {
     "command": {
       "executable": "Pinned.App.cmd",

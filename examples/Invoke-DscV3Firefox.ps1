@@ -9,7 +9,7 @@
 #>
 [CmdletBinding()]
 param(
-    [string] $ConfigurationUri = 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/master/.configurations/firefox.yaml',
+    [string] $ConfigurationUri = 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/feature/dsc-v3-resource/.configurations/firefox-dscv3.yaml',
 
     [string] $ResourcePath = (Join-Path $PSScriptRoot '..\Pinned\DSCv3'),
 

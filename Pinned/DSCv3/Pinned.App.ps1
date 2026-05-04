@@ -9,6 +9,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
+$VerbosePreference = 'SilentlyContinue'
+$WarningPreference = 'SilentlyContinue'
+$InformationPreference = 'SilentlyContinue'
 
 function Read-JsonInput {
     $rawInput = [Console]::In.ReadToEnd()
@@ -152,6 +155,7 @@ function Get-AppSchema {
             Publisher = @{ type = 'string' }
             UninstallString = @{ type = 'string' }
             Installed = @{ type = 'boolean' }
+            _inDesiredState = @{ type = 'boolean' }
         }
     }
 }
@@ -298,12 +302,9 @@ switch ($Operation) {
     }
     'test' {
         $inputObject = Read-JsonInput
-        @{
-            desiredState = $inputObject
-            actualState = Get-NormalizedState -InputObject $inputObject
-            inDesiredState = Test-NormalizedState -InputObject $inputObject
-            differingProperties = @()
-        } | Write-JsonOutput
+        $state = Get-NormalizedState -InputObject $inputObject
+        $state._inDesiredState = Test-NormalizedState -InputObject $inputObject
+        $state | Write-JsonOutput
         break
     }
     'set' {
