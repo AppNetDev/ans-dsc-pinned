@@ -58,9 +58,22 @@ The PowerShell module lives in [`Pinned/`](Pinned/). Repository-level files such
 
 This repository also publishes a command-based DSC v3 resource for `AppNetOnline.Pinned/App`. The DSC v3 package is distributed as a GitHub Release asset named `Pinned.DSCv3.zip`. It contains the command resource wrapper plus the shared `App.psm1` implementation, so it does not require the classic PowerShell DSC module to be installed first.
 
+### Why DSC v3?
+
+The DSC v3 path exists because `winget configure` can be difficult to run reliably from the Windows system context, such as during device management, RMM, scheduled task, or service-based automation. In that context, `winget` often behaves differently than it does in an interactive user session:
+
+- `winget.exe` may not be discoverable on `PATH`
+- the App Installer package may not be available to `NT AUTHORITY\SYSTEM`
+- Microsoft Store/AppX registration can be user-scoped
+- winget source state and package cache can differ per account
+- configuration module discovery can depend on user profile paths
+- troubleshooting failures is harder because the process has no normal desktop session
+
+The DSC v3 bootstrap avoids those moving parts. It downloads the official Microsoft standalone `dsc.exe` from the [PowerShell/DSC GitHub releases](https://github.com/PowerShell/DSC/releases), installs a self-contained command resource package, points `DSC_RESOURCE_PATH` at that package for the current process, and runs a local YAML file. That makes it better suited to system-context automation because the execution path is explicit, portable, and does not depend on the interactive user's winget/App Installer state.
+
 The generic bootstrap:
 
-- installs standalone DSC v3 if `dsc.exe` is missing
+- installs the official Microsoft standalone DSC v3 executable if `dsc.exe` is missing
 - downloads and extracts `Pinned.DSCv3.zip`
 - installs the resource under a predictable DSC resource directory
 - sets `DSC_RESOURCE_PATH` for the current process
