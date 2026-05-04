@@ -13,11 +13,33 @@ param(
 
     [string] $ResourcePath,
 
+    [string] $ResourceBaseUri = 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/feature/dsc-v3-resource/Pinned/DSCv3',
+
     [string] $DestinationPath = (Join-Path $env:TEMP 'ans-configure.yaml')
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+
+function Install-PinnedDscV3ResourceFromUrl {
+    param(
+        [Parameter(Mandatory)]
+        [string] $BaseUri,
+
+        [Parameter(Mandatory)]
+        [string] $Destination
+    )
+
+    if (-not (Test-Path -LiteralPath $Destination)) {
+        New-Item -Path $Destination -ItemType Directory -Force | Out-Null
+    }
+
+    foreach ($fileName in @('Pinned.App.cmd', 'Pinned.App.ps1', 'Pinned.App.dsc.resource.json')) {
+        $uri = '{0}/{1}' -f $BaseUri.TrimEnd('/'), $fileName
+        $path = Join-Path $Destination $fileName
+        Invoke-WebRequest -Uri $uri -OutFile $path -UseBasicParsing
+    }
+}
 
 if ([string]::IsNullOrWhiteSpace($ResourcePath)) {
     $repoResourcePath = if (-not [string]::IsNullOrWhiteSpace($PSScriptRoot)) {
@@ -33,7 +55,8 @@ if ([string]::IsNullOrWhiteSpace($ResourcePath)) {
     } elseif (Test-Path -LiteralPath $installedResourcePath) {
         $ResourcePath = $installedResourcePath
     } else {
-        throw 'Pinned DSC v3 resource path was not specified and could not be found. Pass -ResourcePath or install the Pinned module first.'
+        $ResourcePath = Join-Path $env:TEMP 'Pinned.DSCv3'
+        Install-PinnedDscV3ResourceFromUrl -BaseUri $ResourceBaseUri -Destination $ResourcePath
     }
 }
 
