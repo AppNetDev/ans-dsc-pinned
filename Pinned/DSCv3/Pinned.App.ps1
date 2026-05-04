@@ -327,7 +327,14 @@ Function Set-NormalizedState {
         Set-TargetResource @Parameters;
     };
 
-    Return Get-NormalizedState -InputObject $InputObject;
+    $State = Get-NormalizedState -InputObject $InputObject;
+    $State._inDesiredState = Test-NormalizedState -InputObject $InputObject;
+
+    If (-not $State._inDesiredState) {
+        Throw ('Resource [{0}] did not reach the desired state after set. Current Ensure=[{1}], Installed=[{2}], Version=[{3}].' -f $InputObject.Name, $State.Ensure, $State.Installed, $State.Version);
+    };
+
+    Return $State;
 };
 
 Function New-FallbackState {

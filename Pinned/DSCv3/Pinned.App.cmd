@@ -1,5 +1,5 @@
 @echo off
-setlocal
+setlocal EnableDelayedExpansion
 
 set "SCRIPT=%~dp0Pinned.App.ps1"
 set "PWSH=%ProgramFiles%\PowerShell\7\pwsh.exe"
@@ -9,22 +9,22 @@ set "WINDOWSPOWERSHELL_X86=%SystemRoot%\SysWOW64\WindowsPowerShell\v1.0\powershe
 
 if exist "%PWSH%" (
     "%PWSH%" -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT%" %*
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 if exist "%PWSH_X86%" (
     "%PWSH_X86%" -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT%" %*
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 if exist "%WINDOWSPOWERSHELL%" (
     "%WINDOWSPOWERSHELL%" -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT%" %*
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 if exist "%WINDOWSPOWERSHELL_X86%" (
     "%WINDOWSPOWERSHELL_X86%" -NoProfile -ExecutionPolicy Bypass -File "%SCRIPT%" %*
-    exit /b %ERRORLEVEL%
+    exit /b !ERRORLEVEL!
 )
 
 echo Unable to find pwsh.exe or powershell.exe. Install PowerShell 7 or restore Windows PowerShell. 1>&2
