@@ -279,6 +279,12 @@ Function Get-NormalizedState {
         $State.Ensure = $State.Ensure.ToString();
     };
 
+    ForEach ($PropertyName in @('Name', 'InstallerPath', 'ProductId', 'Version', 'Publisher', 'UninstallString')) {
+        If (($State.ContainsKey($PropertyName)) -and ($Null -eq $State[$PropertyName])) {
+            $State[$PropertyName] = '';
+        };
+    };
+
     If (($InputObject.ContainsKey('Name')) -and ([String]::IsNullOrWhiteSpace([String] $State.Name))) {
         $State.Name = $InputObject.Name;
     };
@@ -324,27 +330,72 @@ Function Set-NormalizedState {
     Return Get-NormalizedState -InputObject $InputObject;
 };
 
-Switch ($Operation) {
-    'schema' {
-        Get-AppSchema | Write-JsonOutput;
-        Break;
+Function New-FallbackState {
+    [CmdletBinding()]
+    Param(
+        [Hashtable] $InputObject = @{}
+    );
+
+    $State = @{
+        Ensure          = 'Absent';
+        Name            = '';
+        InstallerPath   = '';
+        Version         = '';
+        Installed       = $False;
+        _inDesiredState = $False;
     };
 
-    'get' {
-        Get-NormalizedState -InputObject (Read-JsonInput) | Write-JsonOutput;
-        Break;
+    ForEach ($PropertyName in @('Ensure', 'Name', 'InstallerPath', 'Version', 'ProductId')) {
+        If (($InputObject.ContainsKey($PropertyName)) -and ($Null -ne $InputObject[$PropertyName])) {
+            $State[$PropertyName] = $InputObject[$PropertyName];
+        };
     };
 
-    'test' {
-        $InputObject = Read-JsonInput;
-        $State = Get-NormalizedState -InputObject $InputObject;
-        $State._inDesiredState = Test-NormalizedState -InputObject $InputObject;
+    Return $State;
+};
+
+$InputObject = @{};
+
+Try {
+    Switch ($Operation) {
+        'schema' {
+            Get-AppSchema | Write-JsonOutput;
+            Break;
+        };
+
+        'get' {
+            $InputObject = Read-JsonInput;
+            Get-NormalizedState -InputObject $InputObject | Write-JsonOutput;
+            Break;
+        };
+
+        'test' {
+            $InputObject = Read-JsonInput;
+            $State = Get-NormalizedState -InputObject $InputObject;
+            $State._inDesiredState = Test-NormalizedState -InputObject $InputObject;
+            $State | Write-JsonOutput;
+            Break;
+        };
+
+        'set' {
+            $InputObject = Read-JsonInput;
+            Set-NormalizedState -InputObject $InputObject | Write-JsonOutput;
+            Break;
+        };
+    };
+} Catch {
+    [Console]::Error.WriteLine($_.Exception.Message);
+
+    If ($Operation -ne 'schema') {
+        Try {
+            $State = Get-NormalizedState -InputObject $InputObject;
+            $State._inDesiredState = $False;
+        } Catch {
+            $State = New-FallbackState -InputObject $InputObject;
+        };
+
         $State | Write-JsonOutput;
-        Break;
     };
 
-    'set' {
-        Set-NormalizedState -InputObject (Read-JsonInput) | Write-JsonOutput;
-        Break;
-    };
+    [Environment]::Exit(1);
 };
