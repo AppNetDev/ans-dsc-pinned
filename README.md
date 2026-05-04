@@ -54,6 +54,23 @@ Copy-Item -Recurse .\Pinned 'C:\Program Files\WindowsPowerShell\Modules\'
 
 The PowerShell module lives in [`Pinned/`](Pinned/). Repository-level files such as `.configurations/`, `README.md`, and local helper scripts are not part of the published module package.
 
+## DSC v3
+
+This repository also includes a command-based DSC v3 resource at [`Pinned/DSCv3`](Pinned/DSCv3). Add that folder to `PATH` so `dsc` can discover `Pinned.App.dsc.resource.json`:
+
+```powershell
+$env:PATH = "$(Resolve-Path .\Pinned\DSCv3);$env:PATH"
+dsc resource list AppNetOnline.Pinned/App
+```
+
+Example:
+
+```powershell
+dsc resource set `
+  --resource AppNetOnline.Pinned/App `
+  --input '{"Name":"Notepad++ (64-bit x64)","InstallerPath":"https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.4/npp.8.9.4.Installer.x64.exe","Version":"8.9.4","Arguments":"/S","Ensure":"Present"}'
+```
+
 ## Usage
 
 ```powershell
