@@ -11,7 +11,7 @@
 param(
     [string] $ConfigurationUri = 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/feature/dsc-v3-resource/.configurations/firefox-dscv3.yaml',
 
-    [string] $ResourcePath = (Join-Path $PSScriptRoot '..\Pinned\DSCv3'),
+    [string] $ResourcePath,
 
     [string] $DestinationPath = (Join-Path $env:TEMP 'ans-configure.yaml')
 )
@@ -19,8 +19,26 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
+if ([string]::IsNullOrWhiteSpace($ResourcePath)) {
+    $repoResourcePath = if (-not [string]::IsNullOrWhiteSpace($PSScriptRoot)) {
+        Join-Path $PSScriptRoot '..\Pinned\DSCv3'
+    } else {
+        $null
+    }
+
+    $installedResourcePath = Join-Path $env:ProgramFiles 'WindowsPowerShell\Modules\Pinned\DSCv3'
+
+    if ($repoResourcePath -and (Test-Path -LiteralPath $repoResourcePath)) {
+        $ResourcePath = $repoResourcePath
+    } elseif (Test-Path -LiteralPath $installedResourcePath) {
+        $ResourcePath = $installedResourcePath
+    } else {
+        throw 'Pinned DSC v3 resource path was not specified and could not be found. Pass -ResourcePath or install the Pinned module first.'
+    }
+}
+
 $resolvedResourcePath = (Resolve-Path -LiteralPath $ResourcePath).Path
-$env:PATH = "$resolvedResourcePath;$env:PATH"
+$env:DSC_RESOURCE_PATH = $resolvedResourcePath
 
 Invoke-WebRequest -Uri $ConfigurationUri -OutFile $DestinationPath -UseBasicParsing
 
