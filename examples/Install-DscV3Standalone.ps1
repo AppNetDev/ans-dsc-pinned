@@ -18,26 +18,32 @@
     .\examples\Install-DscV3Standalone.ps1 -ConfigurationUri 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/feature/dsc-v3-resource/.configurations/firefox-dscv3.yaml' -ResourcePath 'C:\Program Files\WindowsPowerShell\Modules\Pinned\DSCv3'
 #>
 [CmdletBinding()]
-param(
+Param(
     [ValidateSet('CurrentUser', 'AllUsers')]
-    [string] $Scope = 'CurrentUser',
+    [string] 
+    $Scope = 'CurrentUser',
 
-    [string] $Version = 'latest',
+    [string] 
+    $Version = 'latest',
 
-    [string] $InstallDirectory,
+    [string] 
+    $InstallDirectory,
 
-    [string] $ConfigurationUri,
+    [string] 
+    $ConfigurationUri,
 
-    [string] $ResourcePath,
+    [string] 
+    $ResourcePath,
 
-    [switch] $PersistPath
+    [switch] 
+    $PersistPath
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
-function Get-DscDefaultInstallDirectory {
+Function Get-DscDefaultInstallDirectory {
     param(
         [Parameter(Mandatory)]
         [ValidateSet('CurrentUser', 'AllUsers')]
@@ -49,14 +55,16 @@ function Get-DscDefaultInstallDirectory {
     }
 
     return Join-Path $env:LOCALAPPDATA 'Microsoft\DSC'
-}
+};
 
-function Get-DscWindowsAssetPattern {
+Function Get-DscWindowsAssetPattern {
     $architecture = if ($env:PROCESSOR_ARCHITECTURE) {
         $env:PROCESSOR_ARCHITECTURE
-    } elseif ($env:PROCESSOR_ARCHITEW6432) {
+    }
+    elseif ($env:PROCESSOR_ARCHITEW6432) {
         $env:PROCESSOR_ARCHITEW6432
-    } else {
+    }
+    else {
         [System.Reflection.AssemblyName]::GetAssemblyName((Get-Command powershell.exe).Source).ProcessorArchitecture.ToString()
     }
 
@@ -65,9 +73,9 @@ function Get-DscWindowsAssetPattern {
     }
 
     return 'x86_64-pc-windows-msvc\.zip$'
-}
+};
 
-function Add-DirectoryToPath {
+Function Add-DirectoryToPath {
     param(
         [Parameter(Mandatory)]
         [string] $Path,
@@ -91,9 +99,9 @@ function Add-DirectoryToPath {
     if ($pathParts -notcontains $resolvedPath) {
         [Environment]::SetEnvironmentVariable('PATH', "$resolvedPath;$currentPath", $Target)
     }
-}
+};
 
-function Install-DscV3Standalone {
+Function Install-DscV3Standalone {
     [CmdletBinding()]
     param(
         [ValidateSet('CurrentUser', 'AllUsers')]
@@ -108,7 +116,8 @@ function Install-DscV3Standalone {
 
     $releaseUri = if ($Version -eq 'latest') {
         'https://api.github.com/repos/PowerShell/DSC/releases/latest'
-    } else {
+    }
+    else {
         'https://api.github.com/repos/PowerShell/DSC/releases/tags/{0}' -f $Version
     }
 
@@ -161,9 +170,9 @@ function Install-DscV3Standalone {
     Remove-Item -LiteralPath $extractPath -Recurse -Force -ErrorAction SilentlyContinue
 
     return $installedDsc
-}
+};
 
-function Invoke-DscConfigSetFromUrl {
+Function Invoke-DscConfigSetFromUrl {
     [CmdletBinding()]
     param(
         [Parameter(Mandatory)]
@@ -186,14 +195,15 @@ function Invoke-DscConfigSetFromUrl {
 
     Write-Host "==> Applying configuration: $DestinationPath"
     & $DscPath config set --file $DestinationPath
-}
+};
 
-if ($InstallDirectory) {
+If ($InstallDirectory) {
     $installedDscPath = Install-DscV3Standalone -Scope $Scope -Version $Version -InstallDirectory $InstallDirectory -PersistPath:$PersistPath
-} else {
+}
+Else {
     $installedDscPath = Install-DscV3Standalone -Scope $Scope -Version $Version -PersistPath:$PersistPath
 }
 
-if ($ConfigurationUri) {
+If ($ConfigurationUri) {
     Invoke-DscConfigSetFromUrl -Uri $ConfigurationUri -DscPath $installedDscPath -ResourcePath $ResourcePath
-}
+};
