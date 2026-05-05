@@ -47,79 +47,87 @@ Function Get-DefaultDscInstallDirectory {
     )
 
     if ($Scope -eq 'AllUsers') {
-        return Join-Path $env:ProgramFiles 'DSC'
+        Return Join-Path $env:ProgramFiles 'DSC'
     }
 
-    return Join-Path $env:LOCALAPPDATA 'Microsoft\DSC'
+    Return Join-Path $env:LOCALAPPDATA 'Microsoft\DSC'
 };
 
 Function Get-DefaultPinnedResourceDirectory {
-    param(
+    Param(
         [Parameter(Mandatory)]
         [ValidateSet('CurrentUser', 'AllUsers')]
-        [string] $Scope
+        [string] 
+        $Scope
     )
 
-    if ($Scope -eq 'AllUsers') {
-        return Join-Path $env:ProgramFiles 'DSC\Resources\AppNetOnline.Pinned'
-    }
+    If ($Scope -eq 'AllUsers') {
+        Return Join-Path $env:ProgramFiles 'DSC\Resources\AppNetOnline.Pinned'
+    };
 
-    return Join-Path $env:LOCALAPPDATA 'Microsoft\DSC\Resources\AppNetOnline.Pinned'
+    Return Join-Path $env:LOCALAPPDATA 'Microsoft\DSC\Resources\AppNetOnline.Pinned'
 };
 
 Function Get-DscWindowsAssetPattern {
     $architecture = if ($env:PROCESSOR_ARCHITEW6432) {
         $env:PROCESSOR_ARCHITEW6432
-    } elseif ($env:PROCESSOR_ARCHITECTURE) {
+    }
+    elseif ($env:PROCESSOR_ARCHITECTURE) {
         $env:PROCESSOR_ARCHITECTURE
-    } else {
+    }
+    else {
         'AMD64'
     }
 
-    if ($architecture -match 'ARM64|AARCH64') {
-        return 'aarch64-pc-windows-msvc\.zip$'
-    }
+    If ($architecture -match 'ARM64|AARCH64') {
+        Return 'aarch64-pc-windows-msvc\.zip$'
+    };
 
-    return 'x86_64-pc-windows-msvc\.zip$'
+    Return 'x86_64-pc-windows-msvc\.zip$'
 };
 
 Function Add-DirectoryToPath {
     param(
         [Parameter(Mandatory)]
-        [string] $Path,
+        [string] 
+        $Path,
 
         [ValidateSet('Process', 'User', 'Machine')]
-        [string] $Target = 'Process'
+        [string] 
+        $Target = 'Process'
     )
 
     $resolvedPath = (Resolve-Path -LiteralPath $Path).Path
-    $currentPath = if ($Target -eq 'Process') {
+    $currentPath = If ($Target -eq 'Process') {
         $env:PATH
-    } else {
+    }
+    Else {
         [Environment]::GetEnvironmentVariable('PATH', $Target)
     }
 
     $pathParts = @($currentPath -split ';' | Where-Object { $_ })
-    if ($pathParts -contains $resolvedPath) {
-        return
-    }
+    If ($pathParts -contains $resolvedPath) {
+        Return
+    };
 
-    $updatedPath = if ([string]::IsNullOrWhiteSpace($currentPath)) {
+    $updatedPath = If ([string]::IsNullOrWhiteSpace($currentPath)) {
         $resolvedPath
-    } else {
+    }
+    Else {
         "$resolvedPath;$currentPath"
     }
 
-    if ($Target -eq 'Process') {
+    If ($Target -eq 'Process') {
         $env:PATH = $updatedPath
-    } else {
+    }
+    Else {
         [Environment]::SetEnvironmentVariable('PATH', $updatedPath, $Target)
     }
 };
 
 Function Install-DscV3Standalone {
     [CmdletBinding()]
-    param(
+    Param(
         [ValidateSet('CurrentUser', 'AllUsers')]
         [string] $Scope = 'CurrentUser',
 
@@ -132,7 +140,8 @@ Function Install-DscV3Standalone {
 
     $releaseUri = if ($Version -eq 'latest') {
         'https://api.github.com/repos/PowerShell/DSC/releases/latest'
-    } else {
+    }
+    Else {
         'https://api.github.com/repos/PowerShell/DSC/releases/tags/{0}' -f $Version
     }
 
@@ -140,9 +149,9 @@ Function Install-DscV3Standalone {
     $release = Invoke-RestMethod -Uri $releaseUri -Headers @{ 'User-Agent' = 'ans-dsc-pinned-installer' }
     $assetPattern = Get-DscWindowsAssetPattern
     $asset = @($release.assets | Where-Object { $_.name -match $assetPattern } | Select-Object -First 1)
-    if (-not $asset) {
+    If (-not $asset) {
         throw "Could not find a Windows standalone DSC zip asset matching '$assetPattern' in release '$($release.tag_name)'."
-    }
+    };
 
     $downloadPath = Join-Path $env:TEMP $asset.name
     $extractPath = Join-Path $env:TEMP ('dsc-{0}' -f ([guid]::NewGuid().ToString('N')))
@@ -154,82 +163,88 @@ Function Install-DscV3Standalone {
     Expand-Archive -Path $downloadPath -DestinationPath $extractPath -Force
 
     $dscExe = Get-ChildItem -Path $extractPath -Filter dsc.exe -Recurse | Select-Object -First 1
-    if (-not $dscExe) {
+    If (-not $dscExe) {
         throw "The release asset '$($asset.name)' did not contain dsc.exe."
-    }
+    };
 
-    if (-not (Test-Path -LiteralPath $InstallDirectory)) {
+    If (-not (Test-Path -LiteralPath $InstallDirectory)) {
         New-Item -Path $InstallDirectory -ItemType Directory -Force | Out-Null
-    }
+    };
 
     Write-Host "==> Installing DSC to $InstallDirectory"
     Get-ChildItem -Path $dscExe.Directory.FullName -Force | Copy-Item -Destination $InstallDirectory -Recurse -Force
 
     Add-DirectoryToPath -Path $InstallDirectory -Target Process
-    if ($PersistPath) {
+    If ($PersistPath) {
         $target = if ($Scope -eq 'AllUsers') { 'Machine' } else { 'User' }
         Add-DirectoryToPath -Path $InstallDirectory -Target $target
         Write-Host "==> Added $InstallDirectory to $target PATH"
-    }
+    };
 
     Remove-Item -LiteralPath $downloadPath -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $extractPath -Recurse -Force -ErrorAction SilentlyContinue
 
-    return (Join-Path $InstallDirectory 'dsc.exe')
+    Return (Join-Path $InstallDirectory 'dsc.exe')
 };
 
 Function Test-DscExecutable {
-    param(
+    Param(
         [Parameter(Mandatory)]
-        [string] $Path
+        [string] 
+        $Path
     )
 
-    if (-not (Test-Path -LiteralPath $Path)) {
-        return $false
-    }
+    If (-not (Test-Path -LiteralPath $Path)) {
+        Return $false
+    };
 
     try {
         $null = & $Path --version 2>$null
-        return ($LASTEXITCODE -eq 0)
-    } catch {
-        return $false
+        Return ($LASTEXITCODE -eq 0)
+    }
+    catch {
+        Return $false
     }
 };
 
 Function Resolve-DscPath {
     $command = Get-Command dsc -ErrorAction SilentlyContinue
-    if ($command -and (Test-DscExecutable -Path $command.Source)) {
-        return $command.Source
-    }
+    If ($command -and (Test-DscExecutable -Path $command.Source)) {
+        Return $command.Source
+    };
 
     $defaultPath = Join-Path (Get-DefaultDscInstallDirectory -Scope $Scope) 'dsc.exe'
-    if (Test-DscExecutable -Path $defaultPath) {
+    If (Test-DscExecutable -Path $defaultPath) {
         Add-DirectoryToPath -Path (Split-Path -Parent $defaultPath) -Target Process
-        return $defaultPath
-    }
+        Return $defaultPath
+    };
 
-    return $null
+    Return $null
 };
 
 Function Install-PinnedDscV3Resource {
     [CmdletBinding()]
     param(
-        [string] $PackageUri,
+        [string] 
+        $PackageUri,
 
-        [string] $PackagePath,
+        [string] 
+        $PackagePath,
 
         [Parameter(Mandatory)]
-        [string] $InstallDirectory
+        [string] 
+        $InstallDirectory
     )
 
     $downloadPath = Join-Path $env:TEMP 'Pinned.DSCv3.zip'
     $extractPath = Join-Path $env:TEMP ('Pinned.DSCv3-{0}' -f ([guid]::NewGuid().ToString('N')))
 
-    if ($PackagePath) {
+    If ($PackagePath) {
         $resolvedPackagePath = (Resolve-Path -LiteralPath $PackagePath).Path
         Write-Host "==> Using Pinned DSC v3 resource package: $resolvedPackagePath"
         Copy-Item -Path $resolvedPackagePath -Destination $downloadPath -Force
-    } else {
+    }
+    Else {
         Write-Host "==> Downloading Pinned DSC v3 resource"
         Invoke-WebRequest -Uri $PackageUri -OutFile $downloadPath -UseBasicParsing
     }
@@ -238,13 +253,13 @@ Function Install-PinnedDscV3Resource {
     Expand-Archive -Path $downloadPath -DestinationPath $extractPath -Force
 
     $packageRoot = Join-Path $extractPath 'AppNetOnline.Pinned'
-    if (-not (Test-Path -LiteralPath $packageRoot)) {
+    If (-not (Test-Path -LiteralPath $packageRoot)) {
         throw "The package '$PackageUri' did not contain an AppNetOnline.Pinned folder."
-    }
+    };
 
-    if (Test-Path -LiteralPath $InstallDirectory) {
+    If (Test-Path -LiteralPath $InstallDirectory) {
         Remove-Item -LiteralPath $InstallDirectory -Recurse -Force
-    }
+    };
 
     New-Item -Path $InstallDirectory -ItemType Directory -Force | Out-Null
     Get-ChildItem -Path $packageRoot -Force | Copy-Item -Destination $InstallDirectory -Recurse -Force
@@ -254,11 +269,11 @@ Function Install-PinnedDscV3Resource {
 
     $resourcePath = Join-Path $InstallDirectory 'DSCv3'
     $manifestPath = Join-Path $resourcePath 'Pinned.App.dsc.resource.json'
-    if (-not (Test-Path -LiteralPath $manifestPath)) {
+    If (-not (Test-Path -LiteralPath $manifestPath)) {
         throw "Pinned DSC v3 resource manifest was not found at '$manifestPath'."
-    }
+    };
 
-    return $resourcePath
+    Return $resourcePath
 };
 
 If (-not $DscInstallDirectory) {
