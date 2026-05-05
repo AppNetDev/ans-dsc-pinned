@@ -50,29 +50,29 @@ Function Get-DscDefaultInstallDirectory {
         [string] $Scope
     )
 
-    if ($Scope -eq 'AllUsers') {
-        return Join-Path $env:ProgramFiles 'DSC'
+    If ($Scope -eq 'AllUsers') {
+        Return Join-Path $env:ProgramFiles 'DSC'
     }
 
-    return Join-Path $env:LOCALAPPDATA 'Microsoft\DSC'
+    Return Join-Path $env:LOCALAPPDATA 'Microsoft\DSC'
 };
 
 Function Get-DscWindowsAssetPattern {
-    $architecture = if ($env:PROCESSOR_ARCHITECTURE) {
+    $architecture = If ($env:PROCESSOR_ARCHITECTURE) {
         $env:PROCESSOR_ARCHITECTURE
     }
-    elseif ($env:PROCESSOR_ARCHITEW6432) {
+    elseIf ($env:PROCESSOR_ARCHITEW6432) {
         $env:PROCESSOR_ARCHITEW6432
     }
     else {
         [System.Reflection.AssemblyName]::GetAssemblyName((Get-Command powershell.exe).Source).ProcessorArchitecture.ToString()
     }
 
-    if ($architecture -match 'ARM64|AARCH64') {
-        return 'aarch64-pc-windows-msvc\.zip$'
+    If ($architecture -match 'ARM64|AARCH64') {
+        Return 'aarch64-pc-windows-msvc\.zip$'
     }
 
-    return 'x86_64-pc-windows-msvc\.zip$'
+    Return 'x86_64-pc-windows-msvc\.zip$'
 };
 
 Function Add-DirectoryToPath {
@@ -86,17 +86,17 @@ Function Add-DirectoryToPath {
 
     $resolvedPath = (Resolve-Path -LiteralPath $Path).Path
 
-    if ($Target -eq 'Process') {
+    If ($Target -eq 'Process') {
         $pathParts = @($env:PATH -split ';' | Where-Object { $_ })
-        if ($pathParts -notcontains $resolvedPath) {
+        If ($pathParts -notcontains $resolvedPath) {
             $env:PATH = "$resolvedPath;$env:PATH"
         }
-        return
+        Return
     }
 
     $currentPath = [Environment]::GetEnvironmentVariable('PATH', $Target)
     $pathParts = @($currentPath -split ';' | Where-Object { $_ })
-    if ($pathParts -notcontains $resolvedPath) {
+    If ($pathParts -notcontains $resolvedPath) {
         [Environment]::SetEnvironmentVariable('PATH', "$resolvedPath;$currentPath", $Target)
     }
 };
@@ -114,10 +114,10 @@ Function Install-DscV3Standalone {
         [switch] $PersistPath
     )
 
-    $releaseUri = if ($Version -eq 'latest') {
+    $releaseUri = If ($Version -eq 'latest') {
         'https://api.github.com/repos/PowerShell/DSC/releases/latest'
     }
-    else {
+    Else {
         'https://api.github.com/repos/PowerShell/DSC/releases/tags/{0}' -f $Version
     }
 
@@ -126,9 +126,9 @@ Function Install-DscV3Standalone {
 
     $assetPattern = Get-DscWindowsAssetPattern
     $asset = @($release.assets | Where-Object { $_.name -match $assetPattern } | Select-Object -First 1)
-    if (-not $asset) {
+    If (-not $asset) {
         throw "Could not find a Windows standalone DSC zip asset matching '$assetPattern' in release '$($release.tag_name)'."
-    }
+    };
 
     $downloadPath = Join-Path $env:TEMP $asset.name
     $extractPath = Join-Path $env:TEMP ('dsc-{0}' -f ([guid]::NewGuid().ToString('N')))
@@ -136,31 +136,31 @@ Function Install-DscV3Standalone {
     Write-Host "==> Downloading $($asset.name)"
     Invoke-WebRequest -Uri $asset.browser_download_url -OutFile $downloadPath -UseBasicParsing
 
-    if (Test-Path $extractPath) {
+    If (Test-Path $extractPath) {
         Remove-Item -LiteralPath $extractPath -Recurse -Force
-    }
+    };
 
     Write-Host "==> Extracting DSC"
     Expand-Archive -Path $downloadPath -DestinationPath $extractPath -Force
 
     $dscExe = Get-ChildItem -Path $extractPath -Filter dsc.exe -Recurse | Select-Object -First 1
-    if (-not $dscExe) {
+    If (-not $dscExe) {
         throw "The release asset '$($asset.name)' did not contain dsc.exe."
-    }
+    };
 
-    if (-not (Test-Path $InstallDirectory)) {
+    If (-not (Test-Path $InstallDirectory)) {
         New-Item -Path $InstallDirectory -ItemType Directory -Force | Out-Null
-    }
+    };
 
     Write-Host "==> Installing to $InstallDirectory"
     Get-ChildItem -Path $dscExe.Directory.FullName -Force | Copy-Item -Destination $InstallDirectory -Recurse -Force
 
     Add-DirectoryToPath -Path $InstallDirectory -Target Process
-    if ($PersistPath) {
-        $target = if ($Scope -eq 'AllUsers') { 'Machine' } else { 'User' }
+    If ($PersistPath) {
+        $target = If ($Scope -eq 'AllUsers') { 'Machine' } else { 'User' }
         Add-DirectoryToPath -Path $InstallDirectory -Target $target
         Write-Host "==> Added $InstallDirectory to $target PATH"
-    }
+    };
 
     $installedDsc = Join-Path $InstallDirectory 'dsc.exe'
     Write-Host "==> Installed DSC: $installedDsc"
@@ -169,7 +169,7 @@ Function Install-DscV3Standalone {
     Remove-Item -LiteralPath $downloadPath -Force -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $extractPath -Recurse -Force -ErrorAction SilentlyContinue
 
-    return $installedDsc
+    Return $installedDsc
 };
 
 Function Invoke-DscConfigSetFromUrl {
@@ -185,7 +185,7 @@ Function Invoke-DscConfigSetFromUrl {
         [string] $ResourcePath
     )
 
-    if ($ResourcePath) {
+    If ($ResourcePath) {
         $resolvedResourcePath = (Resolve-Path -LiteralPath $ResourcePath).Path
         $env:DSC_RESOURCE_PATH = $resolvedResourcePath
     }
