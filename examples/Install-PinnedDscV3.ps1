@@ -39,7 +39,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
 
-function Get-DefaultDscInstallDirectory {
+Function Get-DefaultDscInstallDirectory {
     param(
         [Parameter(Mandatory)]
         [ValidateSet('CurrentUser', 'AllUsers')]
@@ -51,9 +51,9 @@ function Get-DefaultDscInstallDirectory {
     }
 
     return Join-Path $env:LOCALAPPDATA 'Microsoft\DSC'
-}
+};
 
-function Get-DefaultPinnedResourceDirectory {
+Function Get-DefaultPinnedResourceDirectory {
     param(
         [Parameter(Mandatory)]
         [ValidateSet('CurrentUser', 'AllUsers')]
@@ -65,9 +65,9 @@ function Get-DefaultPinnedResourceDirectory {
     }
 
     return Join-Path $env:LOCALAPPDATA 'Microsoft\DSC\Resources\AppNetOnline.Pinned'
-}
+};
 
-function Get-DscWindowsAssetPattern {
+Function Get-DscWindowsAssetPattern {
     $architecture = if ($env:PROCESSOR_ARCHITEW6432) {
         $env:PROCESSOR_ARCHITEW6432
     } elseif ($env:PROCESSOR_ARCHITECTURE) {
@@ -81,9 +81,9 @@ function Get-DscWindowsAssetPattern {
     }
 
     return 'x86_64-pc-windows-msvc\.zip$'
-}
+};
 
-function Add-DirectoryToPath {
+Function Add-DirectoryToPath {
     param(
         [Parameter(Mandatory)]
         [string] $Path,
@@ -115,9 +115,9 @@ function Add-DirectoryToPath {
     } else {
         [Environment]::SetEnvironmentVariable('PATH', $updatedPath, $Target)
     }
-}
+};
 
-function Install-DscV3Standalone {
+Function Install-DscV3Standalone {
     [CmdletBinding()]
     param(
         [ValidateSet('CurrentUser', 'AllUsers')]
@@ -176,9 +176,9 @@ function Install-DscV3Standalone {
     Remove-Item -LiteralPath $extractPath -Recurse -Force -ErrorAction SilentlyContinue
 
     return (Join-Path $InstallDirectory 'dsc.exe')
-}
+};
 
-function Test-DscExecutable {
+Function Test-DscExecutable {
     param(
         [Parameter(Mandatory)]
         [string] $Path
@@ -194,9 +194,9 @@ function Test-DscExecutable {
     } catch {
         return $false
     }
-}
+};
 
-function Resolve-DscPath {
+Function Resolve-DscPath {
     $command = Get-Command dsc -ErrorAction SilentlyContinue
     if ($command -and (Test-DscExecutable -Path $command.Source)) {
         return $command.Source
@@ -209,9 +209,9 @@ function Resolve-DscPath {
     }
 
     return $null
-}
+};
 
-function Install-PinnedDscV3Resource {
+Function Install-PinnedDscV3Resource {
     [CmdletBinding()]
     param(
         [string] $PackageUri,
@@ -259,24 +259,24 @@ function Install-PinnedDscV3Resource {
     }
 
     return $resourcePath
-}
+};
 
-if (-not $DscInstallDirectory) {
+If (-not $DscInstallDirectory) {
     $DscInstallDirectory = Get-DefaultDscInstallDirectory -Scope $Scope
-}
+};
 
-if (-not $ResourceInstallDirectory) {
+If (-not $ResourceInstallDirectory) {
     $ResourceInstallDirectory = Get-DefaultPinnedResourceDirectory -Scope $Scope
-}
+};
 
 $dscPath = Resolve-DscPath
-if (-not $dscPath) {
-    if ($SkipDscInstall) {
+If (-not $dscPath) {
+    If ($SkipDscInstall) {
         throw 'dsc.exe was not found and -SkipDscInstall was specified.'
-    }
+    };
 
     $dscPath = Install-DscV3Standalone -Scope $Scope -Version $DscVersion -InstallDirectory $DscInstallDirectory -PersistPath:$PersistDscPath
-}
+};
 
 $resourcePath = Install-PinnedDscV3Resource -PackageUri $ResourcePackageUri -PackagePath $ResourcePackagePath -InstallDirectory $ResourceInstallDirectory
 $env:DSC_RESOURCE_PATH = $resourcePath
@@ -284,10 +284,10 @@ $env:DSC_RESOURCE_PATH = $resourcePath
 Write-Host "==> Installed Pinned DSC v3 resource: $resourcePath"
 & $dscPath resource list AppNetOnline.Pinned/App
 
-if ($ConfigurationUri) {
+If ($ConfigurationUri) {
     Write-Host "==> Downloading configuration"
     Invoke-WebRequest -Uri $ConfigurationUri -OutFile $DestinationPath -UseBasicParsing
 
     Write-Host "==> Applying configuration: $DestinationPath"
     & $dscPath config set --file $DestinationPath
-}
+};
