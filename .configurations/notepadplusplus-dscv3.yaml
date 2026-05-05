@@ -1,0 +1,11 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+  - name: InstallNotepadPlusPlus
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: Notepad++ (64-bit x64)
+      InstallerPath: https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.4/npp.8.9.4.Installer.x64.exe
+      Version: 8.9.4
+      Arguments: /S
+      PatchOnly: true
