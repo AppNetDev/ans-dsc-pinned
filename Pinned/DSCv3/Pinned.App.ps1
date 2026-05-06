@@ -331,7 +331,8 @@ Function Set-NormalizedState {
     $State._inDesiredState = Test-NormalizedState -InputObject $InputObject;
 
     If (-not $State._inDesiredState) {
-        Throw ('Resource [{0}] did not reach the desired state after set. Current Ensure=[{1}], Installed=[{2}], Version=[{3}].' -f $InputObject.Name, $State.Ensure, $State.Installed, $State.Version);
+        $DesiredVersion = If ($InputObject.ContainsKey('Version')) { $InputObject['Version'] } Else { '' };
+        Throw ('Resource [{0}] did not reach the desired state after set. Current Ensure=[{1}], Installed=[{2}], Version=[{3}], DesiredVersion=[{4}].' -f $InputObject.Name, $State.Ensure, $State.Installed, $State.Version, $DesiredVersion);
     };
 
     Return $State;

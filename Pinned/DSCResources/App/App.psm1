@@ -331,7 +331,7 @@ Function Set-TargetResource {
         Invoke-ScriptBlock -ScriptBlockString $PreAction;
     }
     Catch {
-        Write-Error -Exception $_.Exception;
+        Throw;
     };
 
     $TempFolder        = $env:TEMP;
@@ -482,7 +482,7 @@ Function Set-TargetResource {
         }
     }
     Catch {
-        Write-Error -Exception $_.Exception
+        Throw;
     }
     Finally {
         If ($PreCopyTo -and (Test-Path $PreCopyTo -ErrorAction SilentlyContinue)) {
