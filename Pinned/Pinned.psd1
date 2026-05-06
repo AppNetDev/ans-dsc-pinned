@@ -1,5 +1,5 @@
 @{
-    ModuleVersion        = '4.0.3'
+    ModuleVersion        = '4.0.4'
     GUID                 = 'a39e5014-b98f-4df3-ac52-feda586babe8'
     Author               = 'Jarod Roberts (github.com/Sir-Jigston)'
     CompanyName          = ''
@@ -18,6 +18,10 @@
             LicenseUri   = ''
             ProjectUri   = 'https://github.com/AppNetOnline/ans-dsc-pinned'
             ReleaseNotes = @'
+4.0.4
+- Fixed strict mode propagation into PreAction/PostAction scriptblocks causing failures in external scripts that use .Count on scalar objects
+- Fixed Invoke-ScriptBlock null-Arguments guard (was always calling Invoke($null) instead of Invoke() when no arguments provided)
+
 4.0.3
 - Updated winget configuration bootstrap to prefer the local WinGet configuration module path.
 
