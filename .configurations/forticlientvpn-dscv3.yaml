@@ -6,6 +6,7 @@ resources:
       Ensure: Present
       Name: FortiClient VPN
       InstallerPath: C:\Windows\Temp\FortiClientVPN\FortiClientVPN.msi
+      Version: 7.4.3.4726
       Arguments: /quiet /norestart REBOOT=ReallySuppress
       PreAction: |
         $installerFolder = 'C:\Windows\Temp\FortiClientVPN'
@@ -26,4 +27,4 @@ resources:
             -InstallerUri 'https://links.fortinet.com/forticlient/win/vpnagent' `
             -InstallerFolder $installerFolder `
             -InstallerPath $installerPath
-      PatchOnly: false
+      PatchOnly: true
