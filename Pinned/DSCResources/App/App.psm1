@@ -884,9 +884,9 @@ Function Invoke-ScriptBlock {
     )
     If (-not $ScriptBlockString) { Return }
     Try {
-        $ScriptBlock = [ScriptBlock]::Create($ScriptBlockString).GetNewClosure()
+        $ScriptBlock = [ScriptBlock]::Create("Set-StrictMode -Off`n" + $ScriptBlockString)
         Write-MyVerbose -Message ('Executing ScriptBlock') -LogLevel Moderate
-        If (@($Arguments).Count -ge 1) {
+        If ($Null -ne $Arguments -and $Arguments.Count -ge 1) {
             $ScriptBlock.Invoke($Arguments) | Out-String -Stream | Write-MyVerbose -LogLevel All
         } Else {
             $ScriptBlock.Invoke() | Out-String -Stream | Write-MyVerbose -LogLevel All
