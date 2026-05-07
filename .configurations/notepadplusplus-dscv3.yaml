@@ -8,4 +8,4 @@ resources:
       InstallerPath: https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.4/npp.8.9.4.Installer.x64.exe
       Version: 8.9.4
       Arguments: /S
-      PatchOnly: true
+      PatchOnly: false
