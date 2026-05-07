@@ -1,5 +1,5 @@
 @{
-    ModuleVersion        = '4.0.4'
+    ModuleVersion        = '4.0.5'
     GUID                 = 'a39e5014-b98f-4df3-ac52-feda586babe8'
     Author               = 'Jarod Roberts (github.com/Sir-Jigston)'
     CompanyName          = ''
@@ -17,7 +17,10 @@
             Tags         = 'DesiredStateConfiguration', 'DSC', 'DSCResource'
             LicenseUri   = ''
             ProjectUri   = 'https://github.com/AppNetOnline/ans-dsc-pinned'
-            ReleaseNotes = @'
+            $14.0.5
+Fixed error propagation from Set-TargetResource
+Improved did-not-reach-desired-state error to include desired version
+
 4.0.4
 - Fixed strict mode propagation into PreAction/PostAction scriptblocks causing failures in external scripts that use .Count on scalar objects
 - Fixed Invoke-ScriptBlock null-Arguments guard (was always calling Invoke($null) instead of Invoke() when no arguments provided)
