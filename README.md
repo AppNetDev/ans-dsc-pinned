@@ -126,7 +126,7 @@ $wingetArgs = @(
     'configure'
     '--file', 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/master/.configurations/classic/winget-configure.yaml'
     '--accept-configuration-agreements'
-    '--verbose-logs'
+    '--ignore-warnings'
 )
 winget @wingetArgs
 ```
