@@ -1,5 +1,5 @@
 @{
-    ModuleVersion        = '4.0.5'
+    ModuleVersion        = '4.0.6'
     GUID                 = 'a39e5014-b98f-4df3-ac52-feda586babe8'
     Author               = 'Jarod Roberts (github.com/Sir-Jigston)'
     CompanyName          = ''
@@ -20,6 +20,10 @@
             LicenseUri   = ''
             ProjectUri   = 'https://github.com/AppNetOnline/ans-dsc-pinned'
             ReleaseNotes = @'
+4.0.6
+- Added Set-PinnedApp module command for friendly install, update, and uninstall actions
+- Added parameter-driven DSC v3 app bootstrap
+
 4.0.5
 Fixed error propagation from Set-TargetResource
 Improved did-not-reach-desired-state error to include desired version

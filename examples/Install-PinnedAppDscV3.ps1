@@ -28,7 +28,7 @@ param(
 
     [string] $BootstrapUri = 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/feature/dsc-v3-resource/examples/Install-PinnedDscV3.ps1',
 
-    [string] $ResourcePackageUri = 'https://github.com/AppNetOnline/ans-dsc-pinned/releases/download/v4.0.4-dscv3/Pinned.DSCv3.4.0.4.zip',
+    [string] $ResourcePackageUri = 'https://github.com/AppNetOnline/ans-dsc-pinned/releases/download/v4.0.6-dscv3/Pinned.DSCv3.4.0.6.zip',
 
     [string] $ResourcePackagePath,
 
