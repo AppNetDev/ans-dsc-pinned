@@ -12,9 +12,10 @@ run.ps1
 publish.ps1
 Install-Pinned.ps1
 Build.ps1
+Build-DscV3Release.ps1
 Test-PinnedInstall.ps1
 !examples/
-!examples/*.ps1
+!examples/**/*.ps1
 Publish-Release.ps1
 
 # Windows
