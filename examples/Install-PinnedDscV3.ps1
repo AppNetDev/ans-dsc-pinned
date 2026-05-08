@@ -28,6 +28,8 @@ param(
 
     [string] $ConfigurationUri,
 
+    [string] $ConfigurationPath,
+
     [string] $DestinationPath = (Join-Path $env:TEMP 'ans-configure.yaml'),
 
     [switch] $PersistDscPath,
@@ -305,4 +307,11 @@ If ($ConfigurationUri) {
 
     Write-Host "==> Applying configuration: $DestinationPath"
     & $dscPath config set --file $DestinationPath
+};
+
+If ($ConfigurationPath) {
+    $resolvedConfigurationPath = (Resolve-Path -LiteralPath $ConfigurationPath).Path
+
+    Write-Host "==> Applying configuration: $resolvedConfigurationPath"
+    & $dscPath config set --file $resolvedConfigurationPath
 };
