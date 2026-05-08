@@ -1,5 +1,5 @@
 @{
-    ModuleVersion        = '4.0.6'
+    ModuleVersion        = '4.1.0'
     GUID                 = 'a39e5014-b98f-4df3-ac52-feda586babe8'
     Author               = 'Jarod Roberts (github.com/Sir-Jigston)'
     CompanyName          = ''
@@ -20,6 +20,11 @@
             LicenseUri   = ''
             ProjectUri   = 'https://github.com/AppNetOnline/ans-dsc-pinned'
             ReleaseNotes = @'
+4.1.0
+- Added DSC v3 command resource (AppNetOnline.Pinned/App) for system-context automation (RMM, scheduled tasks, SYSTEM account)
+- Set-PinnedApp now returns a structured Pinned.App.Result object with Status, Changed, CurrentVersion, IsInDesiredState, and more
+- Reorganized repository: dscv3/ at root, examples/dscv3/, .configurations/classic/ and .configurations/dscv3/
+
 4.0.6
 - Added Set-PinnedApp as a friendly module command for installing, updating, and uninstalling pinned applications without authoring DSC configuration YAML.
 - Added Action-based app operations: Install, Update, and Uninstall.
