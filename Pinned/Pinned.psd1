@@ -1,5 +1,5 @@
 @{
-    ModuleVersion        = '4.0.3'
+    ModuleVersion        = '4.0.6'
     GUID                 = 'a39e5014-b98f-4df3-ac52-feda586babe8'
     Author               = 'Jarod Roberts (github.com/Sir-Jigston)'
     CompanyName          = ''
@@ -7,7 +7,9 @@
     Description          = 'PowerShell DSC Resource to ensure Windows Desktop Applications are at the desired version using local, UNC, or remote (HTTP/HTTPS) installers.'
     PowerShellVersion    = '5.0'
 
-    FunctionsToExport    = @()
+    RootModule           = 'Pinned.psm1'
+
+    FunctionsToExport    = @('Set-PinnedApp')
     CmdletsToExport      = @()
     AliasesToExport      = @()
     DscResourcesToExport = 'App'
@@ -18,6 +20,21 @@
             LicenseUri   = ''
             ProjectUri   = 'https://github.com/AppNetOnline/ans-dsc-pinned'
             ReleaseNotes = @'
+4.0.6
+- Added Set-PinnedApp as a friendly module command for installing, updating, and uninstalling pinned applications without authoring DSC configuration YAML.
+- Added Action-based app operations: Install, Update, and Uninstall.
+- Added Install-PinnedAppDscV3.ps1 bootstrap for generating DSC v3 app configurations from parameters.
+- Added ConfigurationPath support to Install-PinnedDscV3.ps1 so generated local configs can be applied by the existing bootstrap.
+- Updated DSC v3 resource metadata and release package version to 4.0.6.
+
+4.0.5
+Fixed error propagation from Set-TargetResource
+Improved did-not-reach-desired-state error to include desired version
+
+4.0.4
+- Fixed strict mode propagation into PreAction/PostAction scriptblocks causing failures in external scripts that use .Count on scalar objects
+- Fixed Invoke-ScriptBlock null-Arguments guard (was always calling Invoke($null) instead of Invoke() when no arguments provided)
+
 4.0.3
 - Updated winget configuration bootstrap to prefer the local WinGet configuration module path.
 

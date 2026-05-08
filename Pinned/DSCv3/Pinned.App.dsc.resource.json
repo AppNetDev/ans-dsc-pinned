@@ -1,0 +1,38 @@
+{
+  "$schema": "https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/v3.1.0/resource/manifest.json",
+  "type": "AppNetOnline.Pinned/App",
+  "version": "4.0.6",
+  "description": "Ensures a Windows desktop application is installed, absent, or patched to an exact pinned version.",
+  "get": {
+    "executable": "Pinned.App.cmd",
+    "args": [
+      "get"
+    ],
+    "input": "stdin"
+  },
+  "set": {
+    "executable": "Pinned.App.cmd",
+    "args": [
+      "set"
+    ],
+    "input": "stdin",
+    "implementsPretest": true,
+    "return": "state"
+  },
+  "test": {
+    "executable": "Pinned.App.cmd",
+    "args": [
+      "test"
+    ],
+    "input": "stdin",
+    "return": "state"
+  },
+  "schema": {
+    "command": {
+      "executable": "Pinned.App.cmd",
+      "args": [
+        "schema"
+      ]
+    }
+  }
+}

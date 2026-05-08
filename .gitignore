@@ -3,6 +3,7 @@
 .claude/todos/
 
 # PowerShell / DSC build artifacts
+dist/
 *.ps1xml
 MOF/
 *.mof
@@ -12,6 +13,9 @@ publish.ps1
 Install-Pinned.ps1
 Build.ps1
 Test-PinnedInstall.ps1
+!examples/
+!examples/*.ps1
+Publish-Release.ps1
 
 # Windows
 Thumbs.db
