@@ -46,10 +46,11 @@ Or call `Set-PinnedApp` directly without a DSC configuration:
 Import-Module Pinned
 
 $result = Set-PinnedApp `
-    -Name          'Mozilla Firefox (x64 en-US)' `
-    -InstallerPath 'https://download-installer.cdn.mozilla.net/pub/firefox/releases/150.0.1/win64/en-US/Firefox%20Setup%20150.0.1.msi' `
-    -Version       '150.0.1' `
-    -Action        'Update'
+    -Action       'Update' `
+    -Name         'Mozilla Firefox (x64 en-US)' `
+    -InstallerUri 'https://download-installer.cdn.mozilla.net/pub/firefox/releases/150.0.1/win64/en-US/Firefox%20Setup%20150.0.1.msi' `
+    -Version      '150.0.1' `
+    -Arguments    '/quiet REBOOT=ReallySuppress'
 
 $result  # Pinned.App.Result — shows Status, Changed, CurrentVersion, etc.
 ```
