@@ -11,11 +11,11 @@
     invoking `dsc config set --file`, because DSC expects --file to reference a
     local path.
 .EXAMPLE
-    . .\examples\Install-DscV3Standalone.ps1
+    . .\examples\dscv3\Install-DscV3Standalone.ps1
     Install-DscV3Standalone
-    Invoke-DscConfigSetFromUrl -Uri 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/feature/dsc-v3-resource/.configurations/firefox-dscv3.yaml' -ResourcePath 'C:\Program Files\WindowsPowerShell\Modules\Pinned\DSCv3'
+    Invoke-DscConfigSetFromUrl -Uri 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/master/.configurations/dscv3/firefox-dscv3.yaml' -ResourcePath "$env:ProgramFiles\DSC\Resources\AppNetOnline.Pinned\DSCv3"
 .EXAMPLE
-    .\examples\Install-DscV3Standalone.ps1 -ConfigurationUri 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/feature/dsc-v3-resource/.configurations/firefox-dscv3.yaml' -ResourcePath 'C:\Program Files\WindowsPowerShell\Modules\Pinned\DSCv3'
+    .\examples\dscv3\Install-DscV3Standalone.ps1 -ConfigurationUri 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/master/.configurations/dscv3/firefox-dscv3.yaml' -ResourcePath "$env:ProgramFiles\DSC\Resources\AppNetOnline.Pinned\DSCv3"
 #>
 [CmdletBinding()]
 Param(

@@ -7,9 +7,9 @@
     zip, extracts it to a predictable resource directory, sets DSC_RESOURCE_PATH
     for the current process, and can apply a remote YAML configuration.
 .EXAMPLE
-    irm "https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/feature/dsc-v3-resource/examples/Install-PinnedDscV3.ps1" | iex
+    irm "https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/master/examples/dscv3/Install-PinnedDscV3.ps1" | iex
 .EXAMPLE
-    iex "& { $(irm 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/feature/dsc-v3-resource/examples/Install-PinnedDscV3.ps1') } -ConfigurationUri 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/feature/dsc-v3-resource/.configurations/firefox-dscv3.yaml'"
+    iex "& { $(irm 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/master/examples/dscv3/Install-PinnedDscV3.ps1') } -ConfigurationUri 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-pinned/master/.configurations/dscv3/firefox-dscv3.yaml'"
 #>
 [CmdletBinding()]
 param(

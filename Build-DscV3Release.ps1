@@ -22,10 +22,10 @@ $version = $moduleManifest.Version.ToString()
 
 $stagingRoot = Join-Path $OutputDirectory 'staging'
 $packageRoot = Join-Path $stagingRoot $PackageRootName
-$dscV3Source = Join-Path $PSScriptRoot 'Pinned\DSCv3'
+$dscV3Source = Join-Path $PSScriptRoot 'dscv3'
 $appSource = Join-Path $PSScriptRoot 'Pinned\DSCResources\App'
 $dscV3Destination = Join-Path $packageRoot 'DSCv3'
-$appDestination = Join-Path $packageRoot 'DSCResources\App'
+$appDestination = Join-Path $packageRoot 'Pinned\DSCResources\App'
 $latestZipPath = Join-Path $OutputDirectory 'Pinned.DSCv3.zip'
 $versionedZipPath = Join-Path $OutputDirectory ("Pinned.DSCv3.{0}.zip" -f $version)
 

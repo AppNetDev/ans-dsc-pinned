@@ -182,7 +182,7 @@ Function Get-AppModulePath {
     [CmdletBinding()]
     Param();
 
-    $ModulePath = Join-Path -Path $PSScriptRoot -ChildPath '..\DSCResources\App\App.psm1';
+    $ModulePath = Join-Path -Path $PSScriptRoot -ChildPath '..\Pinned\DSCResources\App\App.psm1';
 
     Return (Resolve-Path -LiteralPath $ModulePath).Path;
 };
