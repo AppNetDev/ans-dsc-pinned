@@ -6,6 +6,6 @@ resources:
       Ensure: Present
       Name: Microsoft Edge
       InstallerPath: https://go.microsoft.com/fwlink/?linkid=2093437
-      Version: 133.0.3065.92
+      Version: 148.0.3967.54
       Arguments: /quiet /norestart
       PatchOnly: true
