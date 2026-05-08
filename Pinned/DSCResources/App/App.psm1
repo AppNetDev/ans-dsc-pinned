@@ -11,10 +11,10 @@ Enum Ensure {
 };
 
 Enum LogLevel {
-    None     = 0
-    Minimal  = 8
+    None = 0
+    Minimal = 8
     Moderate = 64
-    All      = 256
+    All = 256
 };
 
 Function Get-TargetResource {
@@ -23,35 +23,42 @@ Function Get-TargetResource {
     Param(
         [Parameter(Mandatory = $False)]
         [ValidateSet('Present', 'Absent')]
-        [String] $Ensure = 'Present',
+        [String] 
+        $Ensure = 'Present',
 
         [Parameter(Mandatory = $True)]
-        [String] $Name,
+        [String] 
+        $Name,
 
         [Parameter(Mandatory = $True)]
         [AllowEmptyString()]
-        [String] $InstallerPath,
+        [String] 
+        $InstallerPath,
 
         [Parameter(Mandatory = $False)]
-        [String] $ProductId,
+        [String] 
+        $ProductId,
 
         [Parameter(Mandatory = $False)]
-        [String] $Version,
+        [String] 
+        $Version,
 
         [Parameter(Mandatory = $False)]
-        [String] $InstalledCheckFilePath,
+        [String] 
+        $InstalledCheckFilePath,
 
         [Parameter(Mandatory = $False)]
-        [LogLevel] $LogLevel = [LogLevel]::All
+        [LogLevel] 
+        $LogLevel = [LogLevel]::All
     );
 
     $global:GlobalLogLevel = $LogLevel;
 
-    $InstalledVersion  = $Null
-    $UninstallString   = $Null
-    $Publisher         = $Null
+    $InstalledVersion = $Null
+    $UninstallString = $Null
+    $Publisher = $Null
     $DetectedProductId = $Null
-    $DisplayName       = $Name;
+    $DisplayName = $Name;
 
     If ($InstalledCheckFilePath) {
         Write-MyVerbose -Message ('Checking install via file: [{0}]' -f $InstalledCheckFilePath) -LogLevel Minimal
@@ -61,34 +68,38 @@ Function Get-TargetResource {
             Write-MyVerbose -Message ('File present, version: [{0}]' -f $InstalledVersion) -LogLevel Moderate
             $RegistryEntry = If ($ProductId) {
                 Get-InstalledProgram -ProductId $ProductId
-            } Else {
+            }
+            Else {
                 Get-InstalledProgram -Name $Name
             }
             If ($RegistryEntry) {
-                $UninstallString   = $RegistryEntry.UninstallString
-                $Publisher         = $RegistryEntry.Publisher
+                $UninstallString = $RegistryEntry.UninstallString
+                $Publisher = $RegistryEntry.Publisher
                 $DetectedProductId = $RegistryEntry.PSChildName
-                $DisplayName       = $RegistryEntry.DisplayName
+                $DisplayName = $RegistryEntry.DisplayName
             }
-        } Else {
+        }
+        Else {
             Write-MyVerbose -Message ('[{0}] not found - [{1}] is not installed' -f (Split-Path $InstalledCheckFilePath -Leaf), $Name) -LogLevel Moderate
         }
-    } ElseIf ($ProductId) {
+    }
+    ElseIf ($ProductId) {
         $Program = Get-InstalledProgram -ProductId $ProductId
         If ($Program) {
-            $InstalledVersion  = $Program.DisplayVersion
-            $DisplayName       = $Program.DisplayName
-            $UninstallString   = $Program.UninstallString
-            $Publisher         = $Program.Publisher
+            $InstalledVersion = $Program.DisplayVersion
+            $DisplayName = $Program.DisplayName
+            $UninstallString = $Program.UninstallString
+            $Publisher = $Program.Publisher
             $DetectedProductId = $Program.PSChildName
-        }
-    } Else {
+        };
+    }
+    Else {
         $Program = Get-InstalledProgram -Name $Name
         If ($Program) {
-            $InstalledVersion  = $Program.DisplayVersion
-            $DisplayName       = $Program.DisplayName
-            $UninstallString   = $Program.UninstallString
-            $Publisher         = $Program.Publisher
+            $InstalledVersion = $Program.DisplayVersion
+            $DisplayName = $Program.DisplayName
+            $UninstallString = $Program.UninstallString
+            $Publisher = $Program.Publisher
             $DetectedProductId = $Program.PSChildName
         };
     };
@@ -100,8 +111,8 @@ Function Get-TargetResource {
             Name          = ''
             InstallerPath = $InstallerPath
             Installed     = $False
-        }
-    }
+        };
+    };
 
     Write-MyVerbose -Message ('[{0}] is installed | Version: [{1}]' -f $DisplayName, $InstalledVersion) -LogLevel Minimal
 
@@ -111,8 +122,8 @@ Function Get-TargetResource {
         If (Test-Path $KeyPath) {
             Set-ItemProperty -Path $KeyPath -Name UninstallString -Value $UninstallString -Force -ErrorAction SilentlyContinue
             Write-MyVerbose -Message ('Wrote missing UninstallString to registry') -LogLevel Minimal
-        }
-    }
+        };
+    };
 
     Return @{
         Ensure          = 'Present'
@@ -133,34 +144,50 @@ Function Test-TargetResource {
     Param(
         [Parameter(Mandatory = $False)]
         [ValidateSet('Present', 'Absent')]
-        [String] $Ensure = 'Present',
+        [String] 
+        $Ensure = 'Present',
 
         [Parameter(Mandatory = $True)]
-        [String] $Name,
+        [String] 
+        $Name,
 
         [Parameter(Mandatory = $True)]
         [AllowEmptyString()]
-        [String] $InstallerPath,
+        [String] 
+        $InstallerPath,
 
-        [String] $ProductId,
-        [String] $InstalledCheckFilePath,
-        [String] $InstalledCheckScript,
-        [Bool]   $NoRestart = $False,
-        [String] $Version,
-        [Bool]   $ForceVersion = $False,
-        [Bool]   $PatchOnly = $False,
-        [Bool]   $UseSemVer = $False,
-        [String] $Arguments,
-        [String] $ArgumentsForUninstall,
-        [String] $WorkingDirectory,
-        [Bool]   $UseUninstallString = $False,
+        [String] 
+        $ProductId,
+        [String] 
+        $InstalledCheckFilePath,
+        [String] 
+        $InstalledCheckScript,
+        [Bool]   
+        $NoRestart = $False,
+        [String] 
+        $Version,
+        [Bool]   
+        $ForceVersion = $False,
+        [Bool]   
+        $PatchOnly = $False,
+        [Bool]   
+        $UseSemVer = $False,
+        [String] 
+        $Arguments,
+        [String] 
+        $ArgumentsForUninstall,
+        [String] 
+        $WorkingDirectory,
+        [Bool]   
+        $UseUninstallString = $False,
 
         [PSCredential]
         [System.Management.Automation.Credential()]
         $Credential,
 
         [ValidateNotNullOrEmpty()]
-        [UInt32[]] $ReturnCode = @(0, 1641, 3010),
+        [UInt32[]] 
+        $ReturnCode = @(0, 1641, 3010),
 
         [UInt32]
         [ValidateRange(0, 2147483)]
@@ -170,28 +197,35 @@ Function Test-TargetResource {
         [ValidateRange(0, 2147483647)]
         $DownloadTimeout = 900,
 
-        [String] $FileHash,
+        [String] 
+        $FileHash,
 
         [ValidateSet('SHA1', 'SHA256', 'SHA384', 'SHA512', 'MD5', 'RIPEMD160')]
-        [String] $HashAlgorithm = 'SHA256',
+        [String] 
+        $HashAlgorithm = 'SHA256',
 
-        [String] $PreAction,
-        [String] $PostAction,
-        [String] $PreCopyFrom,
-        [String] $PreCopyTo,
+        [String] 
+        $PreAction,
+        [String] 
+        $PostAction,
+        [String] 
+        $PreCopyFrom,
+        [String] 
+        $PreCopyTo,
 
-        [LogLevel] $LogLevel = [LogLevel]::All
+        [LogLevel] 
+        $LogLevel = [LogLevel]::All
     )
 
     $global:GlobalLogLevel = $LogLevel;
 
     If ($InstalledCheckScript) {
         Write-MyVerbose -Message ('Evaluating state via InstalledCheckScript') -LogLevel Minimal
-        $ScriptBlock  = [ScriptBlock]::Create($InstalledCheckScript)
+        $ScriptBlock = [ScriptBlock]::Create($InstalledCheckScript)
         $ScriptResult = [Bool]($ScriptBlock.Invoke())
         Write-MyVerbose -Message ('Script result: [{0}]' -f $ScriptResult) -LogLevel Minimal
         Return $ScriptResult
-    }
+    };
 
     $GetParam = @{
         Ensure                 = $Ensure
@@ -201,7 +235,7 @@ Function Test-TargetResource {
         InstalledCheckFilePath = $InstalledCheckFilePath
         LogLevel               = $LogLevel
         Version                = $Version
-    }
+    };
 
     $ProgramInfo = Get-TargetResource @GetParam -ErrorAction Stop
 
@@ -209,16 +243,16 @@ Function Test-TargetResource {
         $IsAbsent = $ProgramInfo.Ensure -eq 'Absent'
         Write-MyVerbose -Message ('Desired: Absent | Current: [{0}] | Compliant: [{1}]' -f $ProgramInfo.Ensure, $IsAbsent) -LogLevel Minimal
         Return $IsAbsent
-    }
+    };
 
     If ($ProgramInfo.Ensure -eq 'Absent') {
         If ($PatchOnly) {
             Write-Warning -Message '[PatchOnly] Application not present on this machine - skipping.'
             Return $True
-        }
+        };
         Write-MyVerbose -Message ('[{0}] is not installed - desired state: Present' -f $Name) -LogLevel Minimal
         Return $False
-    }
+    };
 
     If ($Version) {
         If ($UseSemVer) {
@@ -233,19 +267,21 @@ Function Test-TargetResource {
                     Write-MyVerbose -Message ('[{0}] version [{1}] does not satisfy range [{2}]' -f $Name, $ProgramInfo.Version, $Version) -LogLevel Moderate
                     Write-MyVerbose -Message ('Current state does not match the desired state') -LogLevel Minimal
                     Return $False
-                }
-            } Catch {
+                };
+            }
+            Catch {
                 Write-Error -Exception $_.Exception
                 Return $False
             }
-        } Else {
+        }
+        Else {
             If (-not (Test-VersionsEqual -Version1 $ProgramInfo.Version -Version2 $Version)) {
                 Write-MyVerbose -Message ('[{0}] installed: [{1}] | desired: [{2}] - mismatch' -f $Name, $ProgramInfo.Version, $Version) -LogLevel Moderate
                 Write-MyVerbose -Message ('[{0}] is not in the desired state' -f $Name) -LogLevel Minimal
                 Return $False
-            }
+            };
         }
-    }
+    };
 
     Write-MyVerbose -Message ('[{0}] is in the desired state' -f $Name) -LogLevel Minimal
     Return $True
@@ -257,14 +293,17 @@ Function Set-TargetResource {
     Param(
         [Parameter(Mandatory = $False)]
         [ValidateSet('Present', 'Absent')]
-        [String] $Ensure = 'Present',
+        [String] 
+        $Ensure = 'Present',
 
         [Parameter(Mandatory = $True)]
-        [String] $Name,
+        [String] 
+        $Name,
 
         [Parameter(Mandatory = $True)]
         [AllowEmptyString()]
-        [String] $InstallerPath,
+        [String] 
+        $InstallerPath,
 
         [String] $ProductId,
         [String] $InstalledCheckFilePath,
@@ -284,7 +323,8 @@ Function Set-TargetResource {
         $Credential,
 
         [ValidateNotNullOrEmpty()]
-        [UInt32[]] $ReturnCode = @(0, 1641, 3010),
+        [UInt32[]] 
+        $ReturnCode = @(0, 1641, 3010),
 
         [UInt32]
         [ValidateRange(0, 2147483)]
@@ -294,17 +334,24 @@ Function Set-TargetResource {
         [ValidateRange(0, 2147483647)]
         $DownloadTimeout = 900,
 
-        [String] $FileHash,
+        [String] 
+        $FileHash,
 
         [ValidateSet('SHA1', 'SHA256', 'SHA384', 'SHA512', 'MD5', 'RIPEMD160')]
-        [String] $HashAlgorithm = 'SHA256',
+        [String] 
+        $HashAlgorithm = 'SHA256',
 
-        [String] $PreAction,
-        [String] $PostAction,
-        [String] $PreCopyFrom,
-        [String] $PreCopyTo,
+        [String] 
+        $PreAction,
+        [String] 
+        $PostAction,
+        [String] 
+        $PreCopyFrom,
+        [String] 
+        $PreCopyTo,
 
-        [LogLevel] $LogLevel = [LogLevel]::All
+        [LogLevel] 
+        $LogLevel = [LogLevel]::All
     )
 
     $global:GlobalLogLevel = $LogLevel;
@@ -312,17 +359,20 @@ Function Set-TargetResource {
     If (($Ensure -eq 'Absent') -and (-not $UseUninstallString) -and (-not $InstallerPath)) {
         Write-Error -Message 'InstallerPath is required when Ensure=Absent and UseUninstallString=False.'
         Return
-    }
+    };
+
     If (($Ensure -eq 'Present') -and (-not $InstallerPath)) {
         Write-Error -Message 'InstallerPath is required when Ensure=Present.'
         Return
-    }
+    };
 
     If ($PreCopyFrom -and [String]::IsNullOrWhiteSpace($PreCopyTo)) {
         Write-Warning -Message 'PreCopyFrom specified but PreCopyTo is empty.'
-    } ElseIf ([String]::IsNullOrWhiteSpace($PreCopyFrom) -and $PreCopyTo) {
+    }
+    ElseIf ([String]::IsNullOrWhiteSpace($PreCopyFrom) -and $PreCopyTo) {
         Write-Warning -Message 'PreCopyTo specified but PreCopyFrom is empty.'
-    } ElseIf ($PreCopyFrom -and $PreCopyTo) {
+    }
+    ElseIf ($PreCopyFrom -and $PreCopyTo) {
         Write-MyVerbose -Message ('PreCopy: [{0}] -> [{1}]' -f $PreCopyFrom, $PreCopyTo) -LogLevel All
         Get-RemoteFile -Path $PreCopyFrom -DestinationFolder $PreCopyTo -Credential $Credential -TimeoutSec $DownloadTimeout -Force -ErrorAction Stop > $Null
     }
@@ -334,12 +384,12 @@ Function Set-TargetResource {
         Throw;
     };
 
-    $TempFolder        = $env:TEMP;
-    $Installer         = '';
-    $Action            = '';
-    $MsiOption         = '';
-    $Arg               = New-Object 'System.Collections.Generic.List[System.String]';
-    $TempDriveName     = [Guid]::NewGuid();
+    $TempFolder = $env:TEMP;
+    $Installer = '';
+    $Action = '';
+    $MsiOption = '';
+    $Arg = New-Object 'System.Collections.Generic.List[System.String]';
+    $TempDriveName = [Guid]::NewGuid();
     $TempInstallerFile = $Null;
 
     Try {
@@ -355,20 +405,23 @@ Function Set-TargetResource {
                     Name          = $Name
                     InstallerPath = $InstallerPath
                     ProductId     = $ProductId
-                }
+                };
                 $ProgramInfo = Get-TargetResource @GetParam -ErrorAction Stop
                 If (-not $ProgramInfo.UninstallString) {
                     Throw 'Could not retrieve UninstallString from the installed application.'
-                }
+                };
+
                 Write-MyVerbose -Message ('Using UninstallString: [{0}]' -f $ProgramInfo.UninstallString) -LogLevel Moderate
                 If ($ProgramInfo.UninstallString -match '^(?<path>.+\.[a-z]{3})(?<args>.*)') {
                     $Installer = $Matches.path
                     $Arg.Add($Matches.args)
-                } Else {
+                }
+                Else {
                     Throw 'Could not parse UninstallString.'
                 }
-            }
-        } Else {
+            };
+        }
+        Else {
             Write-MyVerbose -Message ('Ensure=Present: installing [{0}]' -f $Name) -LogLevel Minimal
             $Action = 'Install';
             $MsiOption = 'i';
@@ -379,53 +432,59 @@ Function Set-TargetResource {
 
             If ($InstallerPath -match '^msiexec[.exe]?') {
                 $InstallerPath = Join-Path $env:windir 'system32\msiexec.exe';
-            }
+            };
 
             $TempUri = [System.Uri]$InstallerPath
 
             If ($TempUri.IsLoopback -and (-not $TempUri.IsUnc)) {
                 If ([String]::IsNullOrWhiteSpace($WorkingDirectory)) {
                     $Installer = $TempUri.LocalPath
-                } Else {
+                }
+                Else {
                     If ($PSBoundParameters.ContainsKey('Credential')) {
                         New-PSDrive -Name $TempDriveName -PSProvider FileSystem -Root (Split-Path $TempUri.LocalPath) -Credential $Credential -ErrorAction Stop > $Null
-                    }
+                    };
                     $Installer = (Get-RemoteFile -Path $InstallerPath -DestinationFolder $WorkingDirectory -Force -PassThru -ErrorAction Stop).FullName
                 }
-            } ElseIf ($TempUri.IsUnc) {
+            }
+            ElseIf ($TempUri.IsUnc) {
                 $CopyDest = If ([String]::IsNullOrWhiteSpace($WorkingDirectory)) { $TempFolder } Else { $WorkingDirectory }
                 If ($PSBoundParameters.ContainsKey('Credential')) {
                     New-PSDrive -Name $TempDriveName -PSProvider FileSystem -Root (Split-Path $TempUri.LocalPath) -Credential $Credential -ErrorAction Stop > $Null
-                }
+                };
+
                 $Installer = (Get-RemoteFile -Path $InstallerPath -DestinationFolder $CopyDest -Force -PassThru -ErrorAction Stop).FullName
-                If ($CopyDest -eq $TempFolder) { $TempInstallerFile = $Installer }
-            } ElseIf ($TempUri.Scheme -eq 'http' -or $TempUri.Scheme -eq 'https') {
+                If ($CopyDest -eq $TempFolder) { $TempInstallerFile = $Installer };
+            }
+            ElseIf ($TempUri.Scheme -eq 'http' -or $TempUri.Scheme -eq 'https') {
                 $DownloadDest = If ([String]::IsNullOrWhiteSpace($WorkingDirectory)) { $TempFolder } Else { $WorkingDirectory }
                 $Installer = (Get-RemoteFile -Path $InstallerPath -DestinationFolder $DownloadDest -Credential $Credential -TimeoutSec $DownloadTimeout -Force -PassThru -ErrorAction Stop).FullName
                 $TempInstallerFile = $Installer
-            } Else {
+            }
+            Else {
                 Throw ('Unsupported installer path scheme: [{0}]. Use a local path, UNC path, or HTTP/HTTPS URL.' -f $InstallerPath)
             }
 
             If ($FileHash) {
                 If (-not (Assert-FileHash -Path $Installer -FileHash $FileHash -Algorithm $HashAlgorithm)) {
                     Throw ('Hash mismatch for [{0}] - aborting installation.' -f $Installer)
-                }
+                };
                 Write-MyVerbose -Message ('Hash verified successfully') -LogLevel Moderate
-            }
+            };
         }
 
         $Arg.Add($Arguments)
 
         If (-not (Test-Path -LiteralPath $Installer -PathType Leaf)) {
             Throw ('Installer not found: [{0}]' -f $Installer)
-        }
+        };
 
         $Extension = [System.IO.Path]::GetExtension($Installer).ToLower()
         If ($Extension -eq '.msi') {
             $Arg.Insert(0, ('/{0} "{1}"' -f $MsiOption, $Installer))
             $Installer = 'msiexec.exe'
-        } ElseIf ($Extension -eq '.msp') {
+        }
+        ElseIf ($Extension -eq '.msp') {
             $Arg.Insert(0, ('/p "{0}"' -f $Installer))
             $Installer = 'msiexec.exe'
         }
@@ -438,7 +497,8 @@ Function Set-TargetResource {
         If ($WorkingDirectory) {
             $CommandParam.WorkingDirectory = $WorkingDirectory
             Write-MyVerbose -Message ('{0}: [{1}] args=[{2}] workdir=[{3}]' -f $Action, $Installer, ($Arg -join ' '), $WorkingDirectory) -LogLevel All
-        } Else {
+        }
+        Else {
             Write-MyVerbose -Message ('{0}: [{1}] args=[{2}]' -f $Action, $Installer, ($Arg -join ' ')) -LogLevel All
         }
 
@@ -450,36 +510,38 @@ Function Set-TargetResource {
             Remove-Artifacts -AppName $Name
             $ExitCode = Start-Command @CommandParam -ErrorAction Stop
             Write-MyVerbose -Message ('Retry ExitCode: [{0}]' -f $ExitCode) -LogLevel Moderate
-        }
+        };
 
         If (-not ($ReturnCode -contains $ExitCode)) {
             Throw ('Unexpected exit code [{0}] - installation may have failed.' -f $ExitCode)
-        }
+        };
 
         Write-MyVerbose -Message ('{0} completed successfully.' -f $Action) -LogLevel Minimal
 
         If ($ForceVersion -and $Version) {
             $InstalledProgram = If ($ProductId) {
                 Get-InstalledProgram -ProductId $ProductId
-            } Else {
+            }
+            Else {
                 Get-InstalledProgram -Name $Name
             }
             If ($InstalledProgram -and $InstalledProgram.PSPath) {
                 Write-MyVerbose -Message ('ForceVersion: writing DisplayVersion [{0}] to registry.' -f $Version) -LogLevel Minimal
                 Set-ItemProperty -Path $InstalledProgram.PSPath -Name DisplayVersion -Value $Version -Force
-            } Else {
+            }
+            Else {
                 Write-Warning -Message ('ForceVersion: could not locate registry entry for [{0}] - version not forced.' -f $Name)
             }
-        }
+        };
 
         If (-not $NoRestart) {
             $ServerFeatureData = Invoke-CimMethod -Name 'GetServerFeature' -Namespace 'root\microsoft\windows\servermanager' -Class 'MSFT_ServerManagerTasks' -Arguments @{ BatchSize = 256 } -ErrorAction Ignore -Verbose:$False
-            $RegistryData      = Get-ItemProperty -LiteralPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager' -Name 'PendingFileRenameOperations' -ErrorAction Ignore
+            $RegistryData = Get-ItemProperty -LiteralPath 'HKLM:\SYSTEM\CurrentControlSet\Control\Session Manager' -Name 'PendingFileRenameOperations' -ErrorAction Ignore
             If (($ServerFeatureData -and $ServerFeatureData.RequiresReboot) -or $RegistryData -or ($ExitCode -eq 3010) -or ($ExitCode -eq 1641)) {
                 Write-MyVerbose -Message 'Reboot required.' -LogLevel Minimal
                 $global:DSCMachineStatus = 1;
             }
-        }
+        };
     }
     Catch {
         Throw;
@@ -519,10 +581,11 @@ Function Test-VersionsEqual {
         $SemanticVersion1 = Get-SemanticVersion -Version $Version1
         $SemanticVersion2 = Get-SemanticVersion -Version $Version2
         Return ($SemanticVersion1.Major -eq $SemanticVersion2.Major -and
-                $SemanticVersion1.Minor -eq $SemanticVersion2.Minor -and
-                $SemanticVersion1.Patch -eq $SemanticVersion2.Patch -and
-                $SemanticVersion1.Build -eq $SemanticVersion2.Build)
-    } Catch {
+            $SemanticVersion1.Minor -eq $SemanticVersion2.Minor -and
+            $SemanticVersion1.Patch -eq $SemanticVersion2.Patch -and
+            $SemanticVersion1.Build -eq $SemanticVersion2.Build)
+    }
+    Catch {
         Return $Version1 -eq $Version2
     }
 };
@@ -561,7 +624,7 @@ namespace SemanticVersion {
     }
 
     If ($Null -ne $Version) {
-        $Split  = $Version.Split('.')
+        $Split = $Version.Split('.')
         [UInt64]$Major = If ($Split.Count -gt 0 -and $Split[0]) { [UInt64]$Split[0] } Else { 0 }
         [UInt64]$Minor = If ($Split.Count -gt 1 -and $Split[1]) { [UInt64]$Split[1] } Else { 0 }
         [UInt64]$Patch = If ($Split.Count -gt 2 -and $Split[2]) { [UInt64]$Split[2] } Else { 0 }
@@ -586,7 +649,8 @@ namespace SemanticVersion {
             $This.Minor = [UInt64]$Matches['minor']
             $This.Major = [UInt64]$Matches['major']
             Return $True
-        } Catch {
+        }
+        Catch {
             Return $False
         }
     } -Force
@@ -603,7 +667,7 @@ namespace SemanticVersion {
     $Obj | Add-Member -MemberType ScriptMethod -Name ToSystemVersion -Value {
         $SemVer = $This
         Return [Version]::New($This.Major, $This.Minor, $This.Patch, $This.Build) |
-            Add-Member -MemberType NoteProperty -Name 'SemVer' -Value $SemVer -Force -PassThru
+        Add-Member -MemberType NoteProperty -Name 'SemVer' -Value $SemVer -Force -PassThru
     } -Force -PassThru
 };
 
@@ -642,8 +706,8 @@ Function Get-RemoteFile {
     Process {
         ForEach ($TempPath in $Path) {
             Try {
-                $OutFile      = ''
-                $Valid        = $True
+                $OutFile = ''
+                $Valid = $True
                 $TempDriveName = [Guid]::NewGuid()
 
                 If ($Null -eq $TempPath.IsLoopback) {
@@ -653,12 +717,13 @@ Function Get-RemoteFile {
 
                 If ($TempPath.IsLoopback -and (-not $TempPath.IsUnc)) {
                     Write-MyVerbose -Message ('Local file: [{0}]' -f $TempPath.LocalPath) -LogLevel All
-                    $Valid   = $True
+                    $Valid = $True
                     $OutFile = Join-Path $DestinationFolder ([System.IO.Path]::GetFileName($TempPath.LocalPath))
                     If ($TempPath.LocalPath -ne $OutFile) {
                         Copy-Item -Path $TempPath.LocalPath -Destination $DestinationFolder -ErrorAction Stop -Force:$Force -Recurse > $Null
                     }
-                } ElseIf ($TempPath.IsUnc) {
+                }
+                ElseIf ($TempPath.IsUnc) {
                     If ($PSBoundParameters.ContainsKey('Credential')) {
                         New-PSDrive -Name $TempDriveName -PSProvider FileSystem -Root (Split-Path $TempPath.LocalPath) -Credential $Credential -ErrorAction Stop > $Null
                     }
@@ -673,8 +738,9 @@ Function Get-RemoteFile {
                     }
                     Write-MyVerbose -Message ('UNC copy: [{0}] -> [{1}]' -f $TempPath.LocalPath, $DestinationFolder) -LogLevel All
                     Copy-Item -Path $TempPath.LocalPath -Destination $DestinationFolder -ErrorAction Stop -Force:$Force -Recurse > $Null
-                } ElseIf ($TempPath.Scheme -eq 'http' -or $TempPath.Scheme -eq 'https') {
-                    $Valid    = $True
+                }
+                ElseIf ($TempPath.Scheme -eq 'http' -or $TempPath.Scheme -eq 'https') {
+                    $Valid = $True
                     $FileName = [System.IO.Path]::GetFileName($TempPath.LocalPath)
                     If ([String]::IsNullOrWhiteSpace($FileName)) {
                         $FileName = $TempPath.Segments[-1].TrimEnd('/')
@@ -700,7 +766,8 @@ Function Get-RemoteFile {
                             $BitsTransferParams.Credential = $Credential
                         }
                         Start-BitsTransfer @BitsTransferParams
-                    } Else {
+                    }
+                    Else {
                         $InvokeWebRequestParams = @{
                             Uri             = $TempPath.AbsoluteUri
                             OutFile         = $OutFile
@@ -715,7 +782,8 @@ Function Get-RemoteFile {
                         };
                         Invoke-WebRequest @InvokeWebRequestParams;
                     }
-                } Else {
+                }
+                Else {
                     $Valid = $False
                     Throw ('[{0}] uses an unsupported scheme. Provide a local path, UNC path, or HTTP/HTTPS URL.' -f $TempPath)
                 }
@@ -761,7 +829,8 @@ Function Assert-FileHash {
         If ($FileHash -eq $Hash) {
             Write-MyVerbose -Message ('Hash match for [{0}]: {1}' -f $Path, $Hash) -LogLevel All
             Return $True
-        } Else {
+        }
+        Else {
             Write-MyVerbose -Message ('Hash mismatch for [{0}]: expected [{1}], got [{2}]' -f $Path, $FileHash, $Hash) -LogLevel All
             Return $False
         }
@@ -785,22 +854,22 @@ Function Get-InstalledProgram {
     Switch ($Wow64) {
         $True {
             $UninstallRegMachine = 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
-            $UninstallRegUser    = 'HKCU:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
+            $UninstallRegUser = 'HKCU:\Software\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
         }
         $False {
             $UninstallRegMachine = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall'
-            $UninstallRegUser    = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall'
+            $UninstallRegUser = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall'
         }
     }
 
     $InstalledPrograms = @()
     $InstalledPrograms += Get-ChildItem -LiteralPath $UninstallRegMachine |
-        ForEach-Object { Get-ItemProperty -LiteralPath $_.PSPath } |
-        Where-Object { $_.PSObject.Properties['DisplayName'] -and $_.DisplayName }
+    ForEach-Object { Get-ItemProperty -LiteralPath $_.PSPath } |
+    Where-Object { $_.PSObject.Properties['DisplayName'] -and $_.DisplayName }
     If (Test-Path $UninstallRegUser) {
         $InstalledPrograms += Get-ChildItem -LiteralPath $UninstallRegUser |
-            ForEach-Object { Get-ItemProperty -LiteralPath $_.PSPath } |
-            Where-Object { $_.PSObject.Properties['DisplayName'] -and $_.DisplayName }
+        ForEach-Object { Get-ItemProperty -LiteralPath $_.PSPath } |
+        Where-Object { $_.PSObject.Properties['DisplayName'] -and $_.DisplayName }
     }
 
     $Program = $Null
@@ -810,13 +879,14 @@ Function Get-InstalledProgram {
         }
         'Id' {
             $ProductId = Format-ProductId -ProductId $ProductId
-            $Program   = $InstalledPrograms | Where-Object { $_.PSChildName -eq $ProductId } | Select-Object -First 1
+            $Program = $InstalledPrograms | Where-Object { $_.PSChildName -eq $ProductId } | Select-Object -First 1
         }
     }
 
     If ($Program) {
         $Program
-    } ElseIf ((-not $Wow64) -and $FallbackToWow64 -and (Test-Path 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall')) {
+    }
+    ElseIf ((-not $Wow64) -and $FallbackToWow64 -and (Test-Path 'HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall')) {
         Get-InstalledProgram @PSBoundParameters -Wow64
     }
 };
@@ -832,7 +902,8 @@ Function Format-ProductId {
     )
     Try {
         Return '{{{0}}}' -f [Guid]::Parse($ProductId).ToString().ToUpper()
-    } Catch {
+    }
+    Catch {
         Write-Error -Message ('The specified ProductId [{0}] is not a valid GUID.' -f $ProductId)
     }
 };
@@ -859,12 +930,14 @@ Function Remove-Artifacts {
     )
     Try {
         $Keys = Get-ChildItem HKCR:Installer -Recurse -ErrorAction Stop |
-            Get-ItemProperty -Name ProductName -ErrorAction SilentlyContinue
-    } Catch {
+        Get-ItemProperty -Name ProductName -ErrorAction SilentlyContinue
+    }
+    Catch {
         New-PSDrive -Name HKCR -PSProvider Registry -Root HKEY_CLASSES_ROOT -ErrorAction SilentlyContinue | Out-Null
         $Keys = Get-ChildItem HKCR:Installer -Recurse |
-            Get-ItemProperty -Name ProductName -ErrorAction SilentlyContinue
-    } Finally {
+        Get-ItemProperty -Name ProductName -ErrorAction SilentlyContinue
+    }
+    Finally {
         Write-MyVerbose -Message ('Removing installer artifacts for [{0}]' -f $AppName) -LogLevel Moderate
         ForEach ($Key in $Keys) {
             If ($Key.ProductName -like "*$AppName*") {
@@ -888,10 +961,12 @@ Function Invoke-ScriptBlock {
         Write-MyVerbose -Message ('Executing ScriptBlock') -LogLevel Moderate
         If ($Null -ne $Arguments -and $Arguments.Count -ge 1) {
             $ScriptBlock.Invoke($Arguments) | Out-String -Stream | Write-MyVerbose -LogLevel All
-        } Else {
+        }
+        Else {
             $ScriptBlock.Invoke() | Out-String -Stream | Write-MyVerbose -LogLevel All
         }
-    } Catch {
+    }
+    Catch {
         Throw $_
     }
 };
@@ -905,18 +980,19 @@ Function Start-Command {
         [Parameter()]             [String]   $WorkingDirectory,
         [Parameter()]             [Int]      $Timeout = [Int]::MaxValue
     )
-    $ProcessInfo              = New-Object System.Diagnostics.ProcessStartInfo
-    $ProcessInfo.FileName     = $FilePath
+    $ProcessInfo = New-Object System.Diagnostics.ProcessStartInfo
+    $ProcessInfo.FileName = $FilePath
     $ProcessInfo.UseShellExecute = $False
-    $ProcessInfo.Arguments    = [String]$ArgumentList
+    $ProcessInfo.Arguments = [String]$ArgumentList
     If ($PSBoundParameters.ContainsKey('WorkingDirectory')) {
         If (-not (Test-Path -LiteralPath $WorkingDirectory -PathType Container)) {
             Write-Warning -Message ('Working directory does not exist: [{0}]' -f $WorkingDirectory)
-        } Else {
+        }
+        Else {
             $ProcessInfo.WorkingDirectory = $WorkingDirectory
         }
     }
-    $Process           = New-Object System.Diagnostics.Process
+    $Process = New-Object System.Diagnostics.Process
     $Process.StartInfo = $ProcessInfo
     $Process.Start()   > $Null
     If (-not $Process.WaitForExit($Timeout)) {
@@ -943,10 +1019,10 @@ Function Write-MyVerbose {
     Begin {
         $ShouldInvoke = ($Null -eq $global:GlobalLogLevel) -or ($LogLevel -le $global:GlobalLogLevel);
         If ($ShouldInvoke) {
-            $WriteVerboseParams = [System.Collections.Generic.Dictionary[[String],[Object]]]::new($PSBoundParameters)
+            $WriteVerboseParams = [System.Collections.Generic.Dictionary[[String], [Object]]]::new($PSBoundParameters)
             $Null = $WriteVerboseParams.Remove('LogLevel')
-            $WrappedCommand       = $ExecutionContext.InvokeCommand.GetCommand('Write-Verbose', [System.Management.Automation.CommandTypes]::Cmdlet)
-            $ScriptCommand        = { & $WrappedCommand @WriteVerboseParams }
+            $WrappedCommand = $ExecutionContext.InvokeCommand.GetCommand('Write-Verbose', [System.Management.Automation.CommandTypes]::Cmdlet)
+            $ScriptCommand = { & $WrappedCommand @WriteVerboseParams }
             $SteppablePipeline = $ScriptCommand.GetSteppablePipeline($MyInvocation.CommandOrigin)
             $SteppablePipeline.Begin($PSCmdlet)
         }
