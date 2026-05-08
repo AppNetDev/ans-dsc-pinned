@@ -7,7 +7,9 @@
     Description          = 'PowerShell DSC Resource to ensure Windows Desktop Applications are at the desired version using local, UNC, or remote (HTTP/HTTPS) installers.'
     PowerShellVersion    = '5.0'
 
-    FunctionsToExport    = @()
+    RootModule           = 'Pinned.psm1'
+
+    FunctionsToExport    = @('Set-PinnedApp')
     CmdletsToExport      = @()
     AliasesToExport      = @()
     DscResourcesToExport = 'App'
@@ -17,7 +19,8 @@
             Tags         = 'DesiredStateConfiguration', 'DSC', 'DSCResource'
             LicenseUri   = ''
             ProjectUri   = 'https://github.com/AppNetOnline/ans-dsc-pinned'
-            $14.0.5
+            ReleaseNotes = @'
+4.0.5
 Fixed error propagation from Set-TargetResource
 Improved did-not-reach-desired-state error to include desired version
 
