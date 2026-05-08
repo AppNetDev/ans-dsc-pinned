@@ -17,6 +17,7 @@ Test-PinnedInstall.ps1
 !examples/
 !examples/**/*.ps1
 Publish-Release.ps1
+Build-DscV3Release.ps1
 
 # Windows
 Thumbs.db
