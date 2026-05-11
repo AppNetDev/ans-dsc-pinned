@@ -5,27 +5,7 @@ resources:
     properties:
       Ensure: Present
       Name: FortiClient VPN
-      InstallerPath: C:\Windows\Temp\FortiClientVPN\FortiClientVPN.msi
+      InstallerPath: https://github.com/AppNetOnline/ans-dsc-pinned/raw/refs/heads/master/.configurations/resources/FortiClientVPN.msi
       Version: 7.4.3.4726
       Arguments: /quiet /norestart REBOOT=ReallySuppress
-      PreAction: |
-        $installerFolder = 'C:\Windows\Temp\FortiClientVPN'
-        $installerPath = Join-Path $installerFolder 'FortiClientVPN.msi'
-        $prepareScript = Join-Path $installerFolder 'FortiClientVPN.Prepare.ps1'
-
-        if (!(Test-Path $installerFolder)) {
-            New-Item -Path $installerFolder -ItemType Directory -Force | Out-Null
-        }
-
-        Invoke-WebRequest `
-            -Uri 'https://raw.githubusercontent.com/AppNetOnline/ans-dsc-resources/main/scripts/FortiClientVPN.Prepare.ps1' `
-            -OutFile $prepareScript `
-            -UseBasicParsing
-
-        & $prepareScript `
-            -Name 'FortiClient VPN' `
-            -InstallerUri 'https://links.fortinet.com/forticlient/win/vpnagent' `
-            -InstallerFolder $installerFolder `
-            -InstallerPath $installerPath `
-            -DesiredVersion '7.4.3.4726'
       PatchOnly: true
