@@ -26,5 +26,6 @@ resources:
             -Name 'FortiClient VPN' `
             -InstallerUri 'https://links.fortinet.com/forticlient/win/vpnagent' `
             -InstallerFolder $installerFolder `
-            -InstallerPath $installerPath
+            -InstallerPath $installerPath `
+            -DesiredVersion '7.4.3.4726'
       PatchOnly: true
