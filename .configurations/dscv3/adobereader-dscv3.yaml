@@ -1,0 +1,11 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+  - name: InstallAdobeReader
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: Adobe Acrobat Reader DC
+      InstallerPath: https://ardownload2.adobe.com/pub/adobe/acrobat/win/AcrobatDC/2600121529/AcroRdrDCx642600121529_en_US.exe
+      Version: 26.001.21529
+      Arguments: /sAll /rs /msi EULA_ACCEPT=YES /qn /norestart
+      PatchOnly: false
