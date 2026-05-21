@@ -6,6 +6,6 @@ resources:
       Ensure: Present
       Name: 7-Zip
       InstallerPath: https://github.com/ip7z/7zip/releases/download/26.01/7z2601-x64.msi
-      Version: 26.01
+      Version: "26.01"
       Arguments: /qn /norestart
       PatchOnly: false
