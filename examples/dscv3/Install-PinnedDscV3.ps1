@@ -64,10 +64,10 @@ Function Get-DefaultPinnedResourceDirectory {
     )
 
     If ($Scope -eq 'AllUsers') {
-        Return Join-Path $env:ProgramFiles 'DSC\Resources\AppNetDev.Pinned'
+        Return Join-Path $env:ProgramFiles 'DSC\Resources\AppNetOnline.Pinned'
     };
 
-    Return Join-Path $env:LOCALAPPDATA 'Microsoft\DSC\Resources\AppNetDev.Pinned'
+    Return Join-Path $env:LOCALAPPDATA 'Microsoft\DSC\Resources\AppNetOnline.Pinned'
 };
 
 Function Get-DscWindowsAssetPattern {
@@ -254,9 +254,9 @@ Function Install-PinnedDscV3Resource {
     Write-Host "==> Extracting Pinned DSC v3 resource"
     Expand-Archive -Path $downloadPath -DestinationPath $extractPath -Force
 
-    $packageRoot = Join-Path $extractPath 'AppNetDev.Pinned'
+    $packageRoot = Join-Path $extractPath 'AppNetOnline.Pinned'
     If (-not (Test-Path -LiteralPath $packageRoot)) {
-        throw "The package '$PackageUri' did not contain an AppNetDev.Pinned folder."
+        throw "The package '$PackageUri' did not contain an AppNetOnline.Pinned folder."
     };
 
     If (Test-Path -LiteralPath $InstallDirectory) {
@@ -299,7 +299,7 @@ $resourcePath = Install-PinnedDscV3Resource -PackageUri $ResourcePackageUri -Pac
 $env:DSC_RESOURCE_PATH = $resourcePath
 
 Write-Host "==> Installed Pinned DSC v3 resource: $resourcePath"
-& $dscPath resource list AppNetDev.Pinned/App
+& $dscPath resource list AppNetOnline.Pinned/App
 
 If ($ConfigurationUri) {
     Write-Host "==> Downloading configuration"
