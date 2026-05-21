@@ -299,7 +299,12 @@ Function Repair-DscSettingsFile {
 
     $settingsJson = $repairedSettings | ConvertTo-Json -Depth 8
     $utf8NoBom = New-Object System.Text.UTF8Encoding $False
-    [System.IO.File]::WriteAllText($settingsPath, $settingsJson, $utf8NoBom)
+    try {
+        [System.IO.File]::WriteAllText($settingsPath, $settingsJson, $utf8NoBom)
+    }
+    catch {
+        Write-Warning "Could not repair DSC settings file '$settingsPath': $($_.Exception.Message)"
+    }
 };
 
 Function Install-PinnedDscV3Resource {
@@ -356,6 +361,45 @@ Function Install-PinnedDscV3Resource {
     Return $resourcePath
 };
 
+Function Install-DscRegistryResource {
+    Param(
+        [Parameter(Mandatory)]
+        [string]
+        $DscPath,
+
+        [Parameter(Mandatory)]
+        [string]
+        $ResourceInstallDirectory
+    )
+
+    $dscDirectory = Split-Path -Parent $DscPath
+    $registryManifest = Join-Path $dscDirectory 'registry.dsc.resource.json'
+    $registryExecutable = Join-Path $dscDirectory 'registry.exe'
+
+    If (-not (Test-Path -LiteralPath $registryManifest -PathType Leaf)) {
+        throw "DSC Registry resource manifest was not found at '$registryManifest'."
+    };
+
+    If (-not (Test-Path -LiteralPath $registryExecutable -PathType Leaf)) {
+        throw "DSC Registry executable was not found at '$registryExecutable'."
+    };
+
+    $resourceRoot = Split-Path -Parent $ResourceInstallDirectory
+    If (-not (Test-Path -LiteralPath $resourceRoot)) {
+        New-Item -Path $resourceRoot -ItemType Directory -Force | Out-Null
+    };
+
+    $registryResourceDirectory = Join-Path $resourceRoot 'Microsoft.Windows.Registry'
+    If (-not (Test-Path -LiteralPath $registryResourceDirectory)) {
+        New-Item -Path $registryResourceDirectory -ItemType Directory -Force | Out-Null
+    };
+
+    Copy-Item -LiteralPath $registryManifest -Destination $registryResourceDirectory -Force
+    Copy-Item -LiteralPath $registryExecutable -Destination $registryResourceDirectory -Force
+
+    Return $registryResourceDirectory
+};
+
 If (-not $DscInstallDirectory) {
     $DscInstallDirectory = Get-DefaultDscInstallDirectory -Scope $Scope
 };
@@ -379,9 +423,10 @@ Write-Host "==> Using DSC executable: $dscPath"
 Repair-DscSettingsFile -DscPath $dscPath
 
 $resourcePath = Install-PinnedDscV3Resource -PackageUri $ResourcePackageUri -PackagePath $ResourcePackagePath -InstallDirectory $ResourceInstallDirectory
+$registryResourcePath = Install-DscRegistryResource -DscPath $dscPath -ResourceInstallDirectory $ResourceInstallDirectory
 $env:DSC_RESOURCE_PATH = @(
     $resourcePath
-    Split-Path -Parent $dscPath
+    $registryResourcePath
 ) -join [System.IO.Path]::PathSeparator
 
 Write-Host "==> Installed Pinned DSC v3 resource: $resourcePath"
