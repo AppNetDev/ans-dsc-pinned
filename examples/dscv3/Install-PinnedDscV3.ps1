@@ -209,6 +209,18 @@ Function Test-DscExecutable {
     }
 };
 
+Function Test-DscBundledResources {
+    Param(
+        [Parameter(Mandatory)]
+        [string]
+        $Path
+    )
+
+    $dscDirectory = Split-Path -Parent $Path
+    $registryManifest = Join-Path $dscDirectory 'registry.dsc.resource.json'
+    Return (Test-Path -LiteralPath $registryManifest -PathType Leaf)
+};
+
 Function Test-DscWindowsAppsAlias {
     Param(
         [string]
@@ -226,13 +238,13 @@ Function Resolve-DscPath {
     )
 
     $installedPath = Join-Path $InstallDirectory 'dsc.exe'
-    If (Test-DscExecutable -Path $installedPath) {
+    If ((Test-DscExecutable -Path $installedPath) -and (Test-DscBundledResources -Path $installedPath)) {
         Add-DirectoryToPath -Path $InstallDirectory -Target Process
         Return $installedPath
     };
 
     $command = Get-Command dsc -ErrorAction SilentlyContinue
-    If ($command -and -not (Test-DscWindowsAppsAlias -Path $command.Source) -and (Test-DscExecutable -Path $command.Source)) {
+    If ($command -and -not (Test-DscWindowsAppsAlias -Path $command.Source) -and (Test-DscExecutable -Path $command.Source) -and (Test-DscBundledResources -Path $command.Source)) {
         Add-DirectoryToPath -Path (Split-Path -Parent $command.Source) -Target Process
         Return $command.Source
     };
@@ -354,6 +366,7 @@ If (-not $dscPath) {
     $dscPath = Install-DscV3Standalone -Scope $Scope -Version $DscVersion -InstallDirectory $DscInstallDirectory -PersistPath:$PersistDscPath
 };
 
+Write-Host "==> Using DSC executable: $dscPath"
 Repair-DscSettingsFile -DscPath $dscPath
 
 $resourcePath = Install-PinnedDscV3Resource -PackageUri $ResourcePackageUri -PackagePath $ResourcePackagePath -InstallDirectory $ResourceInstallDirectory
