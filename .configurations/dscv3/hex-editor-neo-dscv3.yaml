@@ -4,7 +4,7 @@ resources:
     type: AppNetOnline.Pinned/App
     properties:
       Ensure: Present
-      Name: Free Hex Editor Neo
+      Name: HHD Software Free Hex Editor Neo 8.05
       InstallerPath: https://hhdsoftware.com/download/free-hex-editor-neo.exe
       Version: "8.05.00.9372"
       Arguments: -silent -machine
