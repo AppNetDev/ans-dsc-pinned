@@ -5,7 +5,7 @@ resources:
     properties:
       Ensure: Present
       Name: Microsoft 365 Apps for enterprise
-      InstallerPath: C:\ANS\Installers\Office\setup.exe
+      InstallerPath: https://officecdn.microsoft.com/pr/wsus/setup.exe
       Version: "16.0.19929.20090"
       Arguments: /configure Office-WordExcelOutlook.xml
       WorkingDirectory: C:\ANS\Installers\Office
