@@ -1,5 +1,5 @@
 @{
-    ModuleVersion        = '4.1.1'
+    ModuleVersion        = '4.1.2'
     GUID                 = 'a39e5014-b98f-4df3-ac52-feda586babe8'
     Author               = 'Jarod Roberts (github.com/Sir-Jigston)'
     CompanyName          = ''
@@ -20,6 +20,11 @@
             LicenseUri   = ''
             ProjectUri   = 'https://github.com/AppNetOnline/ans-dsc-pinned'
             ReleaseNotes = @'
+4.1.2
+- Changed DSC v3 bootstrap to expose only the bundled Registry resource instead of the entire DSC install directory.
+- Avoids noisy Microsoft.Windows.Appx discovery warnings while still supporting Microsoft.Windows/Registry configs.
+- Made DSC settings repair best-effort so settings-file ACL issues do not block bootstrap.
+
 4.1.1
 - Updated DSC v3 bootstrap to repair DSC tracing settings without UTF-8 BOM issues.
 - Updated DSC v3 bootstrap to preserve DSC bundled resources when setting DSC_RESOURCE_PATH.
