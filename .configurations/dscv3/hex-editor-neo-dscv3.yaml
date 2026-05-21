@@ -6,6 +6,6 @@ resources:
       Ensure: Present
       Name: Free Hex Editor Neo
       InstallerPath: https://hhdsoftware.com/download/free-hex-editor-neo.exe
-      Version: "8.5.0.9372"
+      Version: "8.05.00.9372"
       Arguments: -silent -machine
       PatchOnly: false
