@@ -1,11 +1,11 @@
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 resources:
-  - name: InstallHhdHexEditorNeo
+  - name: Install7Zip
     type: AppNetOnline.Pinned/App
     properties:
       Ensure: Present
-      Name: Free Hex Editor Neo
-      InstallerPath: https://hhdsoftware.com/download/free-hex-editor-neo.exe
-      Version: Latest
-      Arguments: /VERYSILENT /NORESTART
+      Name: 7-Zip
+      InstallerPath: https://github.com/ip7z/7zip/releases/download/26.01/7z2601-x64.msi
+      Version: 26.01
+      Arguments: /qn /norestart
       PatchOnly: false
