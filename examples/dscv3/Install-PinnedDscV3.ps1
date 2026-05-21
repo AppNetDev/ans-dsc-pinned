@@ -278,9 +278,9 @@ Function Repair-DscSettingsFile {
         }
     }
 
-    $repairedSettings |
-        ConvertTo-Json -Depth 8 |
-        Set-Content -LiteralPath $settingsPath -Encoding utf8
+    $settingsJson = $repairedSettings | ConvertTo-Json -Depth 8
+    $utf8NoBom = New-Object System.Text.UTF8Encoding $False
+    [System.IO.File]::WriteAllText($settingsPath, $settingsJson, $utf8NoBom)
 };
 
 Function Install-PinnedDscV3Resource {
