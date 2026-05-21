@@ -6,6 +6,6 @@ resources:
       Ensure: Present
       Name: Ollama
       InstallerPath: https://ollama.com/download/OllamaSetup.exe
-      Version: Latest
-      Arguments: /S
+      Version: "0.24.0"
+      Arguments: /VERYSILENT /SUPPRESSMSGBOXES /ALLUSERS /NORESTART
       PatchOnly: false
