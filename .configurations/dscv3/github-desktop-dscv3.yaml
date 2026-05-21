@@ -1,11 +1,11 @@
 $schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
 resources:
-  - name: InstallHhdHexEditorNeo
+  - name: InstallGitHubDesktop
     type: AppNetOnline.Pinned/App
     properties:
       Ensure: Present
-      Name: Free Hex Editor Neo
-      InstallerPath: https://hhdsoftware.com/download/free-hex-editor-neo.exe
+      Name: GitHub Desktop
+      InstallerPath: https://central.github.com/deployments/desktop/desktop/latest/win32?format=msi
       Version: Latest
-      Arguments: /VERYSILENT /NORESTART
+      Arguments: /qn /norestart
       PatchOnly: false
