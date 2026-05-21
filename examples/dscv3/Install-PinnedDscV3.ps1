@@ -240,6 +240,49 @@ Function Resolve-DscPath {
     Return $null
 };
 
+Function Repair-DscSettingsFile {
+    Param(
+        [Parameter(Mandatory)]
+        [string]
+        $DscPath
+    )
+
+    $settingsPath = Join-Path (Split-Path -Parent $DscPath) 'dsc.settings.json'
+    $settings = $null
+    If (Test-Path -LiteralPath $settingsPath) {
+        try {
+            $settings = Get-Content -LiteralPath $settingsPath -Raw | ConvertFrom-Json
+        }
+        catch {
+            Write-Warning "Replacing unreadable DSC settings file: $settingsPath"
+        }
+    }
+
+    $resourcePath = If ($settings -and $settings.PSObject.Properties.Name -contains 'resourcePath') {
+        $settings.resourcePath
+    }
+    Else {
+        [ordered] @{
+            allowEnvOverride = $true
+            appendEnvPath    = $true
+            directories      = @()
+        }
+    }
+
+    $repairedSettings = [ordered] @{
+        resourcePath = $resourcePath
+        tracing      = [ordered] @{
+            level         = 'WARN'
+            format        = 'Default'
+            allowOverride = $true
+        }
+    }
+
+    $repairedSettings |
+        ConvertTo-Json -Depth 8 |
+        Set-Content -LiteralPath $settingsPath -Encoding utf8
+};
+
 Function Install-PinnedDscV3Resource {
     [CmdletBinding()]
     param(
@@ -310,6 +353,8 @@ If (-not $dscPath) {
 
     $dscPath = Install-DscV3Standalone -Scope $Scope -Version $DscVersion -InstallDirectory $DscInstallDirectory -PersistPath:$PersistDscPath
 };
+
+Repair-DscSettingsFile -DscPath $dscPath
 
 $resourcePath = Install-PinnedDscV3Resource -PackageUri $ResourcePackageUri -PackagePath $ResourcePackagePath -InstallDirectory $ResourceInstallDirectory
 $env:DSC_RESOURCE_PATH = $resourcePath

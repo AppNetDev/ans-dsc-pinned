@@ -6,6 +6,6 @@ resources:
       Ensure: Present
       Name: Microsoft 365 Apps for enterprise
       InstallerPath: C:\ANS\Installers\Office\setup.exe
-      Version: 16.0.19929.20090
+      Version: "16.0.19929.20090"
       Arguments: /configure C:\ANS\Installers\Office\Office-WordExcelOutlook.xml
       PatchOnly: false

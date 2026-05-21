@@ -6,6 +6,6 @@ resources:
       Ensure: Present
       Name: Visual Studio 2022
       InstallerPath: https://aka.ms/vs/17/release/vs_enterprise.exe
-      Version: 17
+      Version: "17"
       Arguments: --quiet --wait --norestart --nocache --installPath "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
       PatchOnly: false
