@@ -127,6 +127,13 @@ Function Add-DirectoryToPath {
     }
 };
 
+Function Add-WindowsPowerShellToPath {
+    $windowsPowerShellPath = Join-Path $env:windir 'System32\WindowsPowerShell\v1.0'
+    If (Test-Path -LiteralPath (Join-Path $windowsPowerShellPath 'powershell.exe')) {
+        Add-DirectoryToPath -Path $windowsPowerShellPath -Target Process
+    }
+};
+
 Function Install-DscV3Standalone {
     [CmdletBinding()]
     Param(
@@ -356,6 +363,8 @@ If (-not $DscInstallDirectory) {
 If (-not $ResourceInstallDirectory) {
     $ResourceInstallDirectory = Get-DefaultPinnedResourceDirectory -Scope $Scope
 };
+
+Add-WindowsPowerShellToPath
 
 $dscPath = Resolve-DscPath -InstallDirectory $DscInstallDirectory
 If (-not $dscPath) {

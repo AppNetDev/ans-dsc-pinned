@@ -1,5 +1,5 @@
 @{
-    ModuleVersion        = '4.1.0'
+    ModuleVersion        = '4.1.1'
     GUID                 = 'a39e5014-b98f-4df3-ac52-feda586babe8'
     Author               = 'Jarod Roberts (github.com/Sir-Jigston)'
     CompanyName          = ''
@@ -20,6 +20,13 @@
             LicenseUri   = ''
             ProjectUri   = 'https://github.com/AppNetOnline/ans-dsc-pinned'
             ReleaseNotes = @'
+4.1.1
+- Updated DSC v3 bootstrap to repair DSC tracing settings without UTF-8 BOM issues.
+- Updated DSC v3 bootstrap to preserve DSC bundled resources when setting DSC_RESOURCE_PATH.
+- Updated DSC v3 bootstrap to require bundled Registry resources before reusing an existing dsc.exe.
+- Added Windows PowerShell to process PATH before DSC discovery to quiet bundled Appx discovery warnings.
+- Updated DSC v3 examples for Bitwarden browser extension dependencies, Office XML deployment, Visual Studio pinned versions, and quoted version values.
+
 4.1.0
 - Added DSC v3 command resource (AppNetOnline.Pinned/App) for system-context automation (RMM, scheduled tasks, SYSTEM account)
 - Set-PinnedApp now returns a structured Pinned.App.Result object with Status, Changed, CurrentVersion, IsInDesiredState, and more

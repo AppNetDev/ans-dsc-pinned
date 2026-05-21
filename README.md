@@ -1,6 +1,6 @@
 # Pinned
 
-[![Version](https://img.shields.io/badge/version-4.1.0-blue?style=flat-square)](https://github.com/AppNetDev/ans-dsc-pinned/releases)
+[![Version](https://img.shields.io/badge/version-4.1.1-blue?style=flat-square)](https://github.com/AppNetDev/ans-dsc-pinned/releases)
 [![Platform](https://img.shields.io/badge/platform-Windows-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/AppNetDev/ans-dsc-pinned)
 [![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE?style=flat-square&logo=powershell&logoColor=white)](https://github.com/PowerShell/PowerShell)
 [![License](https://img.shields.io/badge/license-Proprietary-red?style=flat-square)](https://github.com/AppNetDev/ans-dsc-pinned)
