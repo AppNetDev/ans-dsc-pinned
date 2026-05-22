@@ -5,7 +5,7 @@ resources:
     properties:
       Ensure: Present
       Name: Visual Studio 2017
-      InstallerPath: C:\ANS\Installers\VisualStudio2017\vs_enterprise.exe
+      InstallerPath: https://aka.ms/vs/15/release/vs_enterprise.exe
       Version: "15.9.79"
       Arguments: --quiet --wait --norestart --nocache --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise"
       PatchOnly: false
