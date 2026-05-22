@@ -4,7 +4,7 @@ resources:
     type: AppNetOnline.Pinned/App
     properties:
       Ensure: Present
-      Name: Microsoft 365 Apps for enterprise
+      Name: Microsoft 365 Apps for enterprise - en-us
       InstallerPath: https://officecdn.microsoft.com/pr/wsus/setup.exe
       Version: "16.0.19929.20090"
       Arguments: /configure Office-WordExcelOutlook.xml
