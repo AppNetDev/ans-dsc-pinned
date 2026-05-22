@@ -4,7 +4,7 @@ resources:
     type: AppNetOnline.Pinned/App
     properties:
       Ensure: Present
-      Name: Visual Studio 2017
+      Name: Visual Studio Enterprise 2017
       InstallerPath: https://aka.ms/vs/15/release/vs_enterprise.exe
       Version: "15.9.79"
       Arguments: --quiet --wait --norestart --nocache --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise"

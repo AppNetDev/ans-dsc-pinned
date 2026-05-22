@@ -4,7 +4,7 @@ resources:
     type: AppNetOnline.Pinned/App
     properties:
       Ensure: Present
-      Name: Visual Studio 2022
+      Name: Visual Studio Enterprise 2022
       InstallerPath: https://aka.ms/vs/17/release/vs_enterprise.exe
       Version: "17.14.31"
       Arguments: --quiet --wait --norestart --nocache --installPath "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
