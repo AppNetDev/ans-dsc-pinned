@@ -1,0 +1,145 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+  - name: InstallOfficeWordExcelOutlook
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: Microsoft 365 Apps for enterprise - en-us
+      InstallerPath: https://officecdn.microsoft.com/pr/wsus/setup.exe
+      Version: "16.0.19929.20090"
+      Arguments: /configure Office-WordExcelOutlook.xml
+      WorkingDirectory: C:\ANS\Installers\Office
+      PreAction: Get-AppxPackage -AllUsers -Name Microsoft.MicrosoftOfficeHub -ErrorAction SilentlyContinue | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq 'Microsoft.MicrosoftOfficeHub' } | Remove-AppxProvisionedPackage -Online -AllUsers -ErrorAction SilentlyContinue | Out-Null; if (-not (Test-Path 'C:\ANS\Installers\Office')) { New-Item -Path 'C:\ANS\Installers\Office' -ItemType Directory -Force | Out-Null }; Invoke-WebRequest -Uri 'https://officecdn.microsoft.com/pr/wsus/setup.exe' -OutFile 'C:\ANS\Installers\Office\setup.exe' -UseBasicParsing; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master/.configurations/resources/Office-RemoveAll.xml' -OutFile 'C:\ANS\Installers\Office\Office-RemoveAll.xml' -UseBasicParsing; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master/.configurations/resources/Office-WordExcelOutlook.xml' -OutFile 'C:\ANS\Installers\Office\Office-WordExcelOutlook.xml' -UseBasicParsing; & 'C:\ANS\Installers\Office\setup.exe' /configure 'C:\ANS\Installers\Office\Office-RemoveAll.xml'
+      PatchOnly: false
+
+  - name: InstallNotepadPlusPlus
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: Notepad++ (64-bit x64)
+      InstallerPath: https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.4/npp.8.9.4.Installer.x64.exe
+      Version: "8.9.4"
+      Arguments: /S
+      PatchOnly: false
+
+  - name: InstallChrome
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: Google Chrome
+      InstallerPath: https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi
+      Version: "148.0.7778.179"
+      Arguments: /quiet /norestart
+      PatchOnly: false
+
+  - name: ForceInstallChromeBitwardenExtension
+    type: Microsoft.Windows/Registry
+    dependsOn:
+      - "[resourceId('AppNetOnline.Pinned/App','InstallChrome')]"
+    properties:
+      _exist: true
+      keyPath: HKLM\SOFTWARE\Policies\Google\Chrome\ExtensionInstallForcelist
+      valueName: "1"
+      valueData:
+        String: nngceckbapebfimnlniiiahkandclblb;https://clients2.google.com/service/update2/crx
+
+  - name: InstallFirefox
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: Mozilla Firefox (x64 en-US)
+      InstallerPath: https://download-installer.cdn.mozilla.net/pub/firefox/releases/150.0.1/win64/en-US/Firefox%20Setup%20150.0.1.msi
+      Version: "150.0.1"
+      Arguments: /quiet REBOOT=ReallySuppress
+      PatchOnly: false
+
+  - name: ForceInstallFirefoxBitwardenExtension
+    type: Microsoft.Windows/Registry
+    dependsOn:
+      - "[resourceId('AppNetOnline.Pinned/App','InstallFirefox')]"
+    properties:
+      _exist: true
+      keyPath: HKLM\SOFTWARE\Policies\Mozilla\Firefox\Extensions\Install
+      valueName: "1"
+      valueData:
+        String: https://addons.mozilla.org/firefox/downloads/latest/bitwarden-password-manager/latest.xpi
+
+  - name: InstallExamDiff
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: ExamDiff 1.9.4 (Build 1.9.4.2)
+      InstallerPath: https://www.prestosoft.com/download/ed194_setup.exe
+      Version: "1.9.4.2"
+      Arguments: /VERYSILENT /NORESTART
+      PatchOnly: false
+
+  - name: InstallHhdHexEditorNeo
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: HHD Software Free Hex Editor Neo 8.05
+      InstallerPath: https://hhdsoftware.com/download/free-hex-editor-neo.exe
+      Version: "8.05.00.9372"
+      Arguments: -silent -machine
+      PatchOnly: false
+
+  - name: Install7Zip
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: 7-Zip
+      InstallerPath: https://github.com/ip7z/7zip/releases/download/26.01/7z2601-x64.msi
+      Version: "26.01"
+      Arguments: /qn /norestart
+      PatchOnly: false
+
+  - name: InstallGitHubDesktop
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: GitHub Desktop
+      InstallerPath: https://desktop.githubusercontent.com/releases/3.5.9-370cc108/GitHubDesktopSetup-x64.exe
+      Version: "3.5.9.0"
+      Arguments: /allusers /silent /norestart
+      PatchOnly: false
+
+  - name: InstallVisualStudioCode
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: Microsoft Visual Studio Code
+      InstallerPath: https://update.code.visualstudio.com/1.120.0/win32-x64/stable
+      Version: "1.120.0"
+      Arguments: /VERYSILENT /NORESTART /MERGETASKS=!runcode,addcontextmenufiles,addcontextmenufolders,addtopath
+      PatchOnly: false
+
+  - name: InstallOllama
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: Ollama version 0.24.0
+      InstallerPath: https://ollama.com/download/OllamaSetup.exe
+      Version: "0.24.0"
+      Arguments: /VERYSILENT /SUPPRESSMSGBOXES /ALLUSERS /NORESTART
+      PatchOnly: false
+
+  - name: InstallVisualStudio2017
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: Visual Studio Enterprise 2017
+      InstallerPath: https://aka.ms/vs/15/release/vs_enterprise.exe
+      Version: "15.9.79"
+      Arguments: --quiet --wait --norestart --nocache --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise"
+      PatchOnly: false
+
+  - name: InstallVisualStudio2022
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: Visual Studio Enterprise 2022
+      InstallerPath: https://aka.ms/vs/17/release/vs_enterprise.exe
+      Version: "17.14.33"
+      Arguments: --quiet --wait --norestart --nocache --installPath "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
+      PatchOnly: false
