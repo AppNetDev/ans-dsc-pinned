@@ -88,7 +88,7 @@ resources:
     type: AppNetOnline.Pinned/App
     properties:
       Ensure: Present
-      Name: 7-Zip
+      Name: 7-Zip 26.01 (x64 edition)
       InstallerPath: https://github.com/ip7z/7zip/releases/download/26.01/7z2601-x64.msi
       Version: "26.01"
       Arguments: /qn /norestart
