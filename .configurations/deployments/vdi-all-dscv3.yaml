@@ -122,4 +122,5 @@ resources:
       InstallerPath: https://ollama.com/download/OllamaSetup.exe
       Version: "0.24.0"
       Arguments: /VERYSILENT /SUPPRESSMSGBOXES /ALLUSERS /NORESTART
+      PostAction: Stop-Process -Name 'ollama app','ollama' -Force -ErrorAction SilentlyContinue
       PatchOnly: false
