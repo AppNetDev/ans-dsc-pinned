@@ -1,0 +1,11 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+  - name: InstallVimConnectEcw
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: VIM Connect ECW
+      InstallerPath: '\\AMCHC-DC01\Information Technology\ANS\DSC\installers\vim-connect-ecw-2.65.0.msi'
+      Version: "2.65.0"
+      Arguments: /qn /norestart /L*v C:\Windows\Temp\vim-connect-ecw-install.log PRODUCT_KEY=mCqmpkQ2BjvLRYovxrJMU1 RUN_ON_STARTUP=true REBOOT=ReallySuppress
+      PatchOnly: false
