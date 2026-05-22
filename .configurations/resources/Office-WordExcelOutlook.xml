@@ -12,6 +12,7 @@
     </Product>
   </Add>
   <Display Level="None" AcceptEULA="TRUE" />
+  <Property Name="FORCEAPPSHUTDOWN" Value="TRUE" />
   <Property Name="PinIconsToTaskbar" Value="FALSE" />
   <Updates Enabled="TRUE" Channel="Current" />
   <RemoveMSI />
