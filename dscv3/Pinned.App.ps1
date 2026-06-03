@@ -280,9 +280,16 @@ Function Get-NormalizedState {
     };
 
     ForEach ($PropertyName in @('Name', 'InstallerPath', 'ProductId', 'Version', 'Publisher', 'UninstallString')) {
-        If (($State.ContainsKey($PropertyName)) -and ($Null -eq $State[$PropertyName])) {
+        If (-not $State.ContainsKey($PropertyName)) {
+            $State[$PropertyName] = '';
+        }
+        ElseIf ($Null -eq $State[$PropertyName]) {
             $State[$PropertyName] = '';
         };
+    };
+
+    If (-not $State.ContainsKey('Installed')) {
+        $State.Installed = $False;
     };
 
     If (($InputObject.ContainsKey('Name')) -and ([String]::IsNullOrWhiteSpace([String] $State.Name))) {
