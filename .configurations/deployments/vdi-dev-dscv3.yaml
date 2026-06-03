@@ -137,6 +137,8 @@ resources:
 
   - name: InstallVisualStudio2022
     type: AppNetOnline.Pinned/App
+    dependsOn:
+      - "[resourceId('AppNetOnline.Pinned/App','InstallVisualStudio2017')]"
     properties:
       Ensure: Present
       Name: Visual Studio Enterprise 2022
