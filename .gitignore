@@ -18,7 +18,7 @@ Test-PinnedInstall.ps1
 !examples/**/*.ps1
 Publish-Release.ps1
 Build-DscV3Release.ps1
-
+connectwise-automate-agent-dscv3.yaml
 # Windows
 Thumbs.db
 Desktop.ini
@@ -28,3 +28,4 @@ $RECYCLE.BIN/
 *.tmp
 *.bak
 *.swp
+.gitignore
