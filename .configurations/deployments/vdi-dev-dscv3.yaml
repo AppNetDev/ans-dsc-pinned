@@ -7,7 +7,6 @@ resources:
       Name: Microsoft 365 Apps for enterprise - en-us
       InstallerPath: https://officecdn.microsoft.com/pr/wsus/setup.exe
       InstalledCheckFilePath: C:\Program Files\Microsoft Office\root\Office16\WINWORD.EXE
-      Version: ""
       Arguments: /configure Office-WordExcelOutlook.xml
       WorkingDirectory: C:\ANS\Installers\Office
       PreAction: Get-AppxPackage -AllUsers -Name Microsoft.MicrosoftOfficeHub -ErrorAction SilentlyContinue | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq 'Microsoft.MicrosoftOfficeHub' } | Remove-AppxProvisionedPackage -Online -AllUsers -ErrorAction SilentlyContinue | Out-Null; if (-not (Test-Path 'C:\ANS\Installers\Office')) { New-Item -Path 'C:\ANS\Installers\Office' -ItemType Directory -Force | Out-Null }; Invoke-WebRequest -Uri 'https://officecdn.microsoft.com/pr/wsus/setup.exe' -OutFile 'C:\ANS\Installers\Office\setup.exe' -UseBasicParsing; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master/.configurations/resources/Office-RemoveAll.xml' -OutFile 'C:\ANS\Installers\Office\Office-RemoveAll.xml' -UseBasicParsing; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master/.configurations/resources/Office-WordExcelOutlook.xml' -OutFile 'C:\ANS\Installers\Office\Office-WordExcelOutlook.xml' -UseBasicParsing; & 'C:\ANS\Installers\Office\setup.exe' /configure 'C:\ANS\Installers\Office\Office-RemoveAll.xml'
@@ -20,7 +19,6 @@ resources:
       Name: Notepad++ (64-bit x64)
       InstallerPath: https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.4/npp.8.9.4.Installer.x64.exe
       InstalledCheckFilePath: C:\Program Files\Notepad++\notepad++.exe
-      Version: ""
       Arguments: /S
       PatchOnly: false
 
@@ -31,7 +29,6 @@ resources:
       Name: Google Chrome
       InstallerPath: https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi
       InstalledCheckFilePath: C:\Program Files\Google\Chrome\Application\chrome.exe
-      Version: ""
       Arguments: /quiet /norestart
       PatchOnly: false
 
@@ -53,7 +50,6 @@ resources:
       Name: Mozilla Firefox (x64 en-US)
       InstallerPath: https://download-installer.cdn.mozilla.net/pub/firefox/releases/150.0.1/win64/en-US/Firefox%20Setup%20150.0.1.msi
       InstalledCheckFilePath: C:\Program Files\Mozilla Firefox\firefox.exe
-      Version: ""
       Arguments: /quiet REBOOT=ReallySuppress
       PatchOnly: false
 
@@ -75,7 +71,6 @@ resources:
       Name: ExamDiff 1.9.4 (Build 1.9.4.2)
       InstallerPath: https://www.prestosoft.com/download/ed194_setup.exe
       InstalledCheckFilePath: C:\Program Files\ExamDiff\ExamDiff.exe
-      Version: ""
       Arguments: /VERYSILENT /NORESTART
       PatchOnly: false
 
@@ -86,7 +81,6 @@ resources:
       Name: HHD Software Free Hex Editor Neo 8.05
       InstallerPath: https://hhdsoftware.com/download/free-hex-editor-neo.exe
       InstalledCheckFilePath: C:\Program Files\HHD Software\Free Hex Editor Neo\HexFrame.exe
-      Version: ""
       Arguments: -silent -machine
       PatchOnly: false
 
@@ -97,7 +91,6 @@ resources:
       Name: 7-Zip 26.01 (x64 edition)
       InstallerPath: https://github.com/ip7z/7zip/releases/download/26.01/7z2601-x64.msi
       InstalledCheckFilePath: C:\Program Files\7-Zip\7zFM.exe
-      Version: ""
       Arguments: /qn /norestart
       PatchOnly: false
 
@@ -108,7 +101,6 @@ resources:
       Name: GitHub Desktop
       InstallerPath: https://desktop.githubusercontent.com/releases/3.5.9-370cc108/GitHubDesktopSetup-x64.exe
       InstalledCheckFilePath: C:\Program Files\GitHub Desktop\GitHubDesktop.exe
-      Version: ""
       Arguments: /allusers /silent /norestart
       PatchOnly: false
 
@@ -119,7 +111,6 @@ resources:
       Name: Microsoft Visual Studio Code
       InstallerPath: https://update.code.visualstudio.com/1.120.0/win32-x64/stable
       InstalledCheckFilePath: C:\Program Files\Microsoft VS Code\Code.exe
-      Version: ""
       Arguments: /VERYSILENT /NORESTART /MERGETASKS=!runcode,addcontextmenufiles,addcontextmenufolders,addtopath
       PatchOnly: false
 
@@ -130,7 +121,6 @@ resources:
       Name: Ollama version 0.24.0
       InstallerPath: https://ollama.com/download/OllamaSetup.exe
       InstalledCheckFilePath: C:\Program Files\Ollama\ollama.exe
-      Version: ""
       Arguments: /VERYSILENT /SUPPRESSMSGBOXES /ALLUSERS /NORESTART
       PostAction: Stop-Process -Name 'ollama app','ollama' -Force -ErrorAction SilentlyContinue
       PatchOnly: false
@@ -142,7 +132,6 @@ resources:
       Name: Visual Studio Enterprise 2017
       InstallerPath: https://aka.ms/vs/15/release/vs_enterprise.exe
       InstalledCheckFilePath: C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\devenv.exe
-      Version: ""
       Arguments: --quiet --wait --norestart --nocache --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise"
       PatchOnly: false
 
@@ -155,6 +144,5 @@ resources:
       Name: Visual Studio Enterprise 2022
       InstallerPath: https://aka.ms/vs/17/release/vs_enterprise.exe
       InstalledCheckFilePath: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\devenv.exe
-      Version: ""
       Arguments: --quiet --wait --norestart --nocache --installPath "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
       PatchOnly: false
