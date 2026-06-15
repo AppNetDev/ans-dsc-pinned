@@ -134,3 +134,18 @@ resources:
       Arguments: /VERYSILENT /SUPPRESSMSGBOXES /ALLUSERS /NORESTART
       PostAction: Stop-Process -Name 'ollama app','ollama' -Force -ErrorAction SilentlyContinue
       PatchOnly: false
+
+  - name: SetTimezone
+    type: Microsoft.Windows/TimeZone
+    properties:
+      IsSingleInstance: "Yes"
+      TimeZone: Eastern Standard Time
+
+  - name: ConfigureNtpTime
+    type: Microsoft.Windows/Registry
+    properties:
+      _exist: true
+      keyPath: HKLM\SYSTEM\CurrentControlSet\Services\W32Time\Parameters
+      valueName: NtpServer
+      valueData:
+        String: time.windows.com,0x9 time.nist.gov,0x9
