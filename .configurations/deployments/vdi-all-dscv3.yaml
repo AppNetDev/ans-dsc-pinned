@@ -135,11 +135,14 @@ resources:
       PostAction: Stop-Process -Name 'ollama app','ollama' -Force -ErrorAction SilentlyContinue
       PatchOnly: false
 
-  - name: SetTimezone
-    type: Microsoft.Windows/TimeZone
+  - name: SetTimezoneToEastern
+    type: Microsoft.Windows/Registry
     properties:
-      IsSingleInstance: "Yes"
-      TimeZone: Eastern Standard Time
+      _exist: true
+      keyPath: HKLM\SYSTEM\CurrentControlSet\Control\TimeZoneInformation
+      valueName: StandardName
+      valueData:
+        String: Eastern Standard Time
 
   - name: ConfigureNtpTime
     type: Microsoft.Windows/Registry
