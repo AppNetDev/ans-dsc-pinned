@@ -1,0 +1,12 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+  - name: InstallOneDrive
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: Microsoft OneDrive
+      InstallerPath: https://go.microsoft.com/fwlink/?linkid=844652
+      InstalledCheckFilePath: C:\Program Files\Microsoft OneDrive\OneDrive.exe
+      Version: "26.088.0510.0004"
+      Arguments: /allusers /silent
+      PatchOnly: false

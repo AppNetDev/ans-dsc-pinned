@@ -31,7 +31,7 @@ resources:
       Name: Google Chrome
       InstallerPath: https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi
       InstalledCheckFilePath: C:\Program Files\Google\Chrome\Application\chrome.exe
-      Version: "149.0.7827.54"
+      Version: "149.0.7827.115"
       Arguments: /quiet /norestart
       PatchOnly: false
 
