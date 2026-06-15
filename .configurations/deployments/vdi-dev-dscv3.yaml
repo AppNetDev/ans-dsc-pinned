@@ -74,7 +74,6 @@ resources:
       Ensure: Present
       Name: ExamDiff 1.9.4 (Build 1.9.4.2)
       InstallerPath: https://www.prestosoft.com/download/ed194_setup.exe
-      InstalledCheckFilePath: C:\Program Files (x86)\ExamDiff\ExamDiff.exe
       Version: "1.9.4.2"
       Arguments: /VERYSILENT /NORESTART
       PatchOnly: false
@@ -85,7 +84,6 @@ resources:
       Ensure: Present
       Name: HHD Software Free Hex Editor Neo 8.06
       InstallerPath: https://hhdsoftware.com/download/free-hex-editor-neo.exe
-      InstalledCheckFilePath: C:\Program Files\HHD Software\Free Hex Editor Neo\HexFrame.exe
       Version: "8.06.00.9387"
       Arguments: -silent -machine
       PatchOnly: false
@@ -96,7 +94,6 @@ resources:
       Ensure: Present
       Name: 7-Zip 26.01 (x64 edition)
       InstallerPath: https://github.com/ip7z/7zip/releases/download/26.01/7z2601-x64.msi
-      InstalledCheckFilePath: C:\Program Files\7-Zip\7zFM.exe
       Version: "26.01"
       Arguments: /qn /norestart
       PatchOnly: false
@@ -107,7 +104,6 @@ resources:
       Ensure: Present
       Name: GitHub Desktop
       InstallerPath: https://github.com/desktop/desktop/releases/download/release-3.5.12/GitHubDesktopSetup-x64.exe
-      InstalledCheckFilePath: C:\Program Files\GitHub Desktop\GitHubDesktop.exe
       Version: "3.5.12"
       Arguments: /allusers /silent /norestart
       PatchOnly: false
@@ -118,7 +114,6 @@ resources:
       Ensure: Present
       Name: Microsoft Visual Studio Code
       InstallerPath: https://update.code.visualstudio.com/1.123.0/win32-x64/stable
-      InstalledCheckFilePath: C:\Program Files\Microsoft VS Code\Code.exe
       Version: "1.123.0"
       Arguments: /VERYSILENT /NORESTART /MERGETASKS=!runcode,addcontextmenufiles,addcontextmenufolders,addtopath
       PatchOnly: false
@@ -127,10 +122,9 @@ resources:
     type: AppNetOnline.Pinned/App
     properties:
       Ensure: Present
-      Name: Ollama version 0.30.4
+      Name: Ollama version 0.30.8
       InstallerPath: https://ollama.com/download/OllamaSetup.exe
-      InstalledCheckFilePath: C:\Program Files\Ollama\ollama.exe
-      Version: "0.30.4"
+      Version: "0.30.8"
       Arguments: /VERYSILENT /SUPPRESSMSGBOXES /ALLUSERS /NORESTART
       PostAction: Stop-Process -Name 'ollama app','ollama' -Force -ErrorAction SilentlyContinue
       PatchOnly: false
@@ -141,7 +135,6 @@ resources:
       Ensure: Present
       Name: Visual Studio Enterprise 2017
       InstallerPath: https://aka.ms/vs/15/release/vs_enterprise.exe
-      InstalledCheckFilePath: C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\devenv.exe
       Version: "15.9.37202.19"
       Arguments: --quiet --wait --norestart --nocache --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise"
       PatchOnly: false
@@ -154,7 +147,6 @@ resources:
       Ensure: Present
       Name: Visual Studio Enterprise 2022
       InstallerPath: https://aka.ms/vs/17/release/vs_enterprise.exe
-      InstalledCheckFilePath: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\devenv.exe
       Version: "17.14.37314.3"
       Arguments: --quiet --wait --norestart --nocache --installPath "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
       PatchOnly: false
