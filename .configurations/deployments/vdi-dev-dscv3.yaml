@@ -104,8 +104,9 @@ resources:
       Ensure: Present
       Name: GitHub Desktop
       InstallerPath: https://github.com/desktop/desktop/releases/download/release-3.5.12/GitHubDesktopSetup-x64.exe
+      InstalledCheckFilePath: C:\Program Files\GitHub Desktop\GitHubDesktop.exe
       Version: "3.5.12"
-      Arguments: /allusers /silent /norestart
+      Arguments: /S /AllUsers
       PatchOnly: false
 
   - name: InstallVisualStudioCode
