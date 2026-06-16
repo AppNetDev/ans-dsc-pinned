@@ -11,3 +11,14 @@ resources:
       Arguments: /VERYSILENT /SUPPRESSMSGBOXES /ALLUSERS /NORESTART
       PostAction: Stop-Process -Name 'ollama app','ollama' -Force -ErrorAction SilentlyContinue
       PatchOnly: false
+
+  - name: InstallGitHubDesktop
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: GitHub Desktop
+      InstallerPath: https://github.com/desktop/desktop/releases/download/release-3.5.12/GitHubDesktopSetup-x64.msi
+      InstalledCheckFilePath: C:\Users\AppNet\AppData\Local\GitHubDesktop\GitHubDesktop.exe
+      Version: "3.5.12"
+      Arguments: /quiet /norestart
+      PatchOnly: false
