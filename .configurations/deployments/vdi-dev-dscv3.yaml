@@ -132,27 +132,3 @@ resources:
       Version: "3.5.12"
       Arguments: /quiet /norestart
       PatchOnly: false
-
-  - name: InstallVisualStudio2017
-    type: AppNetOnline.Pinned/App
-    properties:
-      Ensure: Present
-      Name: Visual Studio Enterprise 2017
-      InstallerPath: https://aka.ms/vs/15/release/vs_enterprise.exe
-      InstalledCheckFilePath: C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\devenv.exe
-      Version: latest
-      Arguments: --quiet --wait --norestart --nocache --installPath "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
-      PatchOnly: false
-
-  - name: InstallVisualStudio2022
-    type: AppNetOnline.Pinned/App
-    dependsOn:
-      - "[resourceId('AppNetOnline.Pinned/App','InstallVisualStudio2017')]"
-    properties:
-      Ensure: Present
-      Name: Visual Studio Enterprise 2022
-      InstallerPath: https://aka.ms/vs/17/release/vs_enterprise.exe
-      InstalledCheckFilePath: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\devenv.exe
-      Version: latest
-      Arguments: --quiet --wait --norestart --nocache --installPath "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise"
-      PatchOnly: false
