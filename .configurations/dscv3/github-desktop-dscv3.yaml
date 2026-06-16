@@ -17,7 +17,7 @@ resources:
     properties:
       Ensure: Present
       Name: GitHub Desktop
-      InstallerPath: C:\Program Files\GitHub Desktop Deployment\GitHubDesktopDeploymentTool.exe
+      InstallerPath: C:\Program Files (x86)\GitHub Desktop Deployment\GitHubDesktopDeploymentTool.exe
       InstalledCheckScript: Test-Path -LiteralPath 'C:\Program Files\GitHub Desktop\GitHubDesktop.exe'
       Version: latest
       Arguments: -s
