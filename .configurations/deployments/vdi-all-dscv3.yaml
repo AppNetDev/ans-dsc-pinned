@@ -85,7 +85,7 @@ resources:
       Ensure: Present
       Name: HHD Software Free Hex Editor Neo 8.06
       InstallerPath: https://hhdsoftware.com/download/free-hex-editor-neo.exe
-      InstalledCheckFilePath: C:\Program Files\HHD Software\Free Hex Editor Neo\HexFrame.exe
+      InstalledCheckFilePath: C:\Program Files\HHD Software\Hex Editor Neo\HexFrame.exe
       Version: latest
       Arguments: -silent -machine
       PatchOnly: false
