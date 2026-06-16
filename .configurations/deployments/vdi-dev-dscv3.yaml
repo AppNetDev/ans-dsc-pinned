@@ -118,7 +118,6 @@ resources:
       Ensure: Present
       Name: GitHub Desktop Deployment Tool
       InstallerPath: https://github.com/desktop/desktop/releases/latest/download/GitHubDesktopSetup-x64.msi
-      InstalledCheckScript: Test-Path -LiteralPath 'C:\Program Files\GitHub Desktop Deployment\GitHubDesktopDeploymentTool.exe'
       Version: latest
       Arguments: /qn /norestart
       PatchOnly: false
