@@ -112,28 +112,6 @@ resources:
       Arguments: /VERYSILENT /NORESTART /MERGETASKS=!runcode,addcontextmenufiles,addcontextmenufolders,addtopath
       PatchOnly: false
 
-  - name: InstallGitHubDesktopDeploymentTool
-    type: AppNetOnline.Pinned/App
-    properties:
-      Ensure: Present
-      Name: GitHub Desktop Deployment Tool
-      InstallerPath: https://github.com/desktop/desktop/releases/latest/download/GitHubDesktopSetup-x64.msi
-      Version: latest
-      Arguments: /qn /norestart
-      PatchOnly: false
-
-  - name: StageGitHubDesktop
-    type: AppNetOnline.Pinned/App
-    dependsOn:
-      - "[resourceId('AppNetOnline.Pinned/App','InstallGitHubDesktopDeploymentTool')]"
-    properties:
-      Ensure: Present
-      Name: GitHub Desktop
-      InstallerPath: C:\Program Files (x86)\GitHub Desktop Deployment\GitHubDesktopDeploymentTool.exe
-      Version: latest
-      Arguments: -s
-      PatchOnly: false
-
   - name: InstallOllama
     type: AppNetOnline.Pinned/App
     properties:
