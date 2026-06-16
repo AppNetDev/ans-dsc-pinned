@@ -8,6 +8,6 @@ resources:
       InstallerPath: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
       InstalledCheckFilePath: C:\Program Files\Ollama\ollama.exe
       Version: latest
-      Arguments: -NoProfile -ExecutionPolicy Bypass -Command "$env:OLLAMA_INSTALL_DIR='C:\Program Files\Ollama'; irm https://ollama.com/install.ps1 | iex"
+      Arguments: -NoProfile -ExecutionPolicy Bypass -Command "$env:OLLAMA_INSTALL_DIR='C:\\Program Files\\Ollama'; irm https://ollama.com/install.ps1 | iex"
       PostAction: Stop-Process -Name 'ollama app','ollama' -Force -ErrorAction SilentlyContinue
       PatchOnly: false
