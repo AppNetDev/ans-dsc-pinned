@@ -121,6 +121,7 @@ resources:
       InstalledCheckFilePath: C:\Program Files\GitHub Desktop\GitHubDesktop.exe
       Version: latest
       Arguments: /qn /norestart
+      PostAction: '& "$env:ProgramFiles\GitHub Desktop Deployment\GitHubDesktopDeploymentTool.exe" -s'
       PatchOnly: false
 
   - name: InstallOllama
