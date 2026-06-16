@@ -118,8 +118,7 @@ resources:
       Ensure: Present
       Name: Ollama version 0.30.8
       InstallerPath: https://ollama.com/download/OllamaSetup.exe
-      InstalledCheckFilePath: C:\Program Files\Ollama\ollama.exe
-      Version: latest
+      Version: "0.30.8"
       Arguments: /VERYSILENT /SUPPRESSMSGBOXES /ALLUSERS /NORESTART
       PostAction: Stop-Process -Name 'ollama app','ollama' -Force -ErrorAction SilentlyContinue
       PatchOnly: false
