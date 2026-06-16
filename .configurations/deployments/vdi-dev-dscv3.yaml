@@ -141,7 +141,7 @@ resources:
       InstallerPath: https://aka.ms/vs/15/release/vs_enterprise.exe
       InstalledCheckFilePath: C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\devenv.exe
       Version: latest
-      Arguments: --quiet --wait --norestart --nocache --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise"
+      Arguments: --quiet --wait --norestart --nocache --installPath "C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Enterprise"
       PatchOnly: false
 
   - name: InstallVisualStudio2022
@@ -154,5 +154,5 @@ resources:
       InstallerPath: https://aka.ms/vs/17/release/vs_enterprise.exe
       InstalledCheckFilePath: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\devenv.exe
       Version: latest
-      Arguments: --quiet --wait --norestart --nocache --installPath "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
+      Arguments: --quiet --wait --norestart --nocache --installPath "C:\\Program Files\\Microsoft Visual Studio\\2022\\Enterprise"
       PatchOnly: false
