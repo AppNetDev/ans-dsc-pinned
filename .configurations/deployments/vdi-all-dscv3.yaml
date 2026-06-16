@@ -74,7 +74,7 @@ resources:
       Ensure: Present
       Name: ExamDiff 1.9.4 (Build 1.9.4.2)
       InstallerPath: https://www.prestosoft.com/download/ed194_setup.exe
-      InstalledCheckFilePath: C:\Program Files\ExamDiff\ExamDiff.exe
+      InstalledCheckFilePath: C:\Program Files (x86)\ExamDiff\ExamDiff.exe
       Version: "1.9.4.2"
       Arguments: /VERYSILENT /NORESTART
       PatchOnly: false
