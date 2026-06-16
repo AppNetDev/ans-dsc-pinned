@@ -145,9 +145,9 @@ Function Set-PinnedApp {
         [String] 
         $InstallerUri,
 
-        [Parameter(Mandatory)]
+        [Parameter()]
         [String] 
-        $Version,
+        $Version = '',
 
         [Parameter(Mandatory)]
         [String] 

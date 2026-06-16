@@ -1,10 +1,10 @@
 @{
-    ModuleVersion        = '4.1.2'
+    ModuleVersion        = '4.1.3'
     GUID                 = 'a39e5014-b98f-4df3-ac52-feda586babe8'
     Author               = 'Jarod Roberts (github.com/Sir-Jigston)'
     CompanyName          = ''
     Copyright            = '(c) 2022 Jarod Roberts. All rights reserved.'
-    Description          = 'PowerShell DSC Resource to ensure Windows Desktop Applications are at the desired version using local, UNC, or remote (HTTP/HTTPS) installers.'
+    Description          = 'PowerShell DSC Resource to ensure Windows Desktop Applications are installed or at the desired version using local, UNC, or remote (HTTP/HTTPS) installers.'
     PowerShellVersion    = '5.0'
 
     RootModule           = 'Pinned.psm1'
@@ -20,6 +20,10 @@
             LicenseUri   = ''
             ProjectUri   = 'https://github.com/AppNetOnline/ans-dsc-pinned'
             ReleaseNotes = @'
+4.1.3
+- Added Version=latest support to install from latest installer URLs without pinning or enforcing an exact installed version.
+- Set-PinnedApp Version is now optional for unpinned installs.
+
 4.1.2
 - Changed DSC v3 bootstrap to expose only the bundled Registry resource instead of the entire DSC install directory.
 - Avoids noisy Microsoft.Windows.Appx discovery warnings while still supporting Microsoft.Windows/Registry configs.

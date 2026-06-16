@@ -254,7 +254,7 @@ Function Test-TargetResource {
         Return $False
     };
 
-    If ($Version) {
+    If ($Version -and -not (Test-LatestVersion -Version $Version)) {
         If ($UseSemVer) {
             $SemVer = $Null
             If (-not [pspm.SemVer]::TryParse($ProgramInfo.Version, [ref]$SemVer)) {
@@ -281,6 +281,9 @@ Function Test-TargetResource {
                 Return $False
             };
         }
+    };
+    If (Test-LatestVersion -Version $Version) {
+        Write-MyVerbose -Message ('[{0}] version pinning disabled because desired version is [latest]' -f $Name) -LogLevel Moderate
     };
 
     Write-MyVerbose -Message ('[{0}] is in the desired state' -f $Name) -LogLevel Minimal
@@ -518,7 +521,7 @@ Function Set-TargetResource {
 
         Write-MyVerbose -Message ('{0} completed successfully.' -f $Action) -LogLevel Minimal
 
-        If ($ForceVersion -and $Version) {
+        If ($ForceVersion -and $Version -and -not (Test-LatestVersion -Version $Version)) {
             $InstalledProgram = If ($ProductId) {
                 Get-InstalledProgram -ProductId $ProductId
             }
@@ -565,6 +568,18 @@ Function Set-TargetResource {
     Catch {
         Write-Error -Exception $_.Exception;
     };
+};
+
+
+Function Test-LatestVersion {
+    [CmdletBinding()]
+    [OutputType([Bool])]
+    Param(
+        [AllowNull()]
+        [String] $Version
+    )
+
+    Return (-not [String]::IsNullOrWhiteSpace($Version)) -and ($Version.Trim() -ieq 'latest')
 };
 
 

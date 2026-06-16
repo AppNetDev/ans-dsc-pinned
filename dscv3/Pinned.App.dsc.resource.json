@@ -1,8 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/v3.1.0/resource/manifest.json",
   "type": "AppNetOnline.Pinned/App",
-  "version": "4.1.2",
-  "description": "Ensures a Windows desktop application is installed, absent, or patched to an exact pinned version.",
+  "version": "4.1.3",
+  "description": "Ensures a Windows desktop application is installed, absent, or patched to a desired version.",
   "get": {
     "executable": "Pinned.App.cmd",
     "args": [

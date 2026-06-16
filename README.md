@@ -1,13 +1,13 @@
 # Pinned
 
-[![Version](https://img.shields.io/badge/version-4.1.1-blue?style=flat-square)](https://github.com/AppNetDev/ans-dsc-pinned/releases)
+[![Version](https://img.shields.io/badge/version-4.1.3-blue?style=flat-square)](https://github.com/AppNetDev/ans-dsc-pinned/releases)
 [![Platform](https://img.shields.io/badge/platform-Windows-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/AppNetDev/ans-dsc-pinned)
 [![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE?style=flat-square&logo=powershell&logoColor=white)](https://github.com/PowerShell/PowerShell)
 [![License](https://img.shields.io/badge/license-Proprietary-red?style=flat-square)](https://github.com/AppNetDev/ans-dsc-pinned)
 
-**Install Windows applications that WinGet can't. Built for RMM tools, SYSTEM context, and exact version enforcement.**
+**Install Windows applications that WinGet can't. Built for RMM tools, SYSTEM context, and version-aware enforcement.**
 
-Install from local paths, UNC shares, or HTTP/HTTPS URLs — lock to an exact version — run from any account including `NT AUTHORITY\SYSTEM`.
+Install from local paths, UNC shares, or HTTP/HTTPS URLs — lock to an exact version or install unpinned latest releases — run from any account including `NT AUTHORITY\SYSTEM`.
 
 ---
 
@@ -200,7 +200,7 @@ $result  # Pinned.App.Result — shows Status, Changed, CurrentVersion, etc.
 | `Name` | String | **Yes** | Display name of the application (used for registry lookup) |
 | `InstallerPath` | String | **Yes** | Local path, UNC share, or HTTP/HTTPS URL to the installer |
 | `Ensure` | String | No | `Present` (default) or `Absent` |
-| `Version` | String | No | Exact version to enforce (e.g. `124.0.6367.82`) |
+| `Version` | String | No | Exact version to enforce (e.g. `124.0.6367.82`). Use `latest` or omit this property to install without version pinning. |
 | `ProductId` | String | No | MSI Product GUID for detection instead of display name |
 | `InstalledCheckFilePath` | String | No | Path to a file whose `ProductVersion` metadata is used for detection |
 | `InstalledCheckScript` | String | No | PowerShell script block string that returns `$true` if installed |
@@ -239,6 +239,20 @@ When multiple detection methods are configured, Pinned evaluates them in this or
 1. `InstalledCheckFilePath` — reads the file's `ProductVersion` metadata
 2. `ProductId` — registry lookup by MSI GUID
 3. `Name` — registry lookup by display name
+
+### Unpinned Latest Installs
+
+Set `Version = 'latest'` or omit `Version` to install from a latest/stable installer URL without enforcing the installed version. Pinned will still ensure the application is present, but any detected installed version is considered compliant.
+
+```powershell
+App Chrome {
+    Ensure        = 'Present'
+    Name          = 'Google Chrome'
+    InstallerPath = 'https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi'
+    Version       = 'latest'
+    Arguments     = '/quiet /norestart'
+}
+```
 
 ### PatchOnly
 

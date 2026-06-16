@@ -142,7 +142,10 @@ Function Get-AppSchema {
                 maximum = 2147483647;
                 default = 900;
             };
-            Version                = @{ type = 'string'; };
+            Version                = @{
+                type        = 'string';
+                description = 'Exact version to enforce. Use latest or omit this property to install without version pinning.';
+            };
             PatchOnly              = @{
                 type    = 'boolean';
                 default = $False;
