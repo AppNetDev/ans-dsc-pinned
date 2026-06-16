@@ -1,5 +1,5 @@
 @{
-    ModuleVersion        = '4.1.3'
+    ModuleVersion        = '4.1.4'
     GUID                 = 'a39e5014-b98f-4df3-ac52-feda586babe8'
     Author               = 'Jarod Roberts (github.com/Sir-Jigston)'
     CompanyName          = ''
@@ -20,6 +20,11 @@
             LicenseUri   = ''
             ProjectUri   = 'https://github.com/AppNetOnline/ans-dsc-pinned'
             ReleaseNotes = @'
+4.1.4
+- Updated deployment configs to use Version=latest for stable/latest installer URLs.
+- Added GitHub Desktop deployment entries that use the machine-wide MSI installer.
+- Added file-based checks for unpinned HHD Hex Editor Neo and Ollama installs.
+
 4.1.3
 - Added Version=latest support to install from latest installer URLs without pinning or enforcing an exact installed version.
 - Set-PinnedApp Version is now optional for unpinned installs.

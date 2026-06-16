@@ -6,6 +6,6 @@ resources:
       Ensure: Present
       Name: FortiClient
       InstallerPath: https://github.com/AppNetOnline/ans-dsc-pinned/raw/master/.configurations/resources/FortiClient.msi
-      Version: "7.4.7.2003"
+      Version: latest
       Arguments: /quiet /norestart REBOOT=ReallySuppress
       PatchOnly: false

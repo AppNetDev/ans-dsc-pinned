@@ -7,6 +7,6 @@ resources:
       Name: Microsoft OneDrive
       InstallerPath: https://go.microsoft.com/fwlink/?linkid=844652
       InstalledCheckFilePath: C:\Program Files\Microsoft OneDrive\OneDrive.exe
-      Version: "26.088.0510.0004"
+      Version: latest
       Arguments: /allusers /silent
       PatchOnly: false

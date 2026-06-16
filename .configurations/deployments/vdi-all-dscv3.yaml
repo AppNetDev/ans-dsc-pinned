@@ -7,7 +7,7 @@ resources:
       Name: Microsoft 365 Apps for enterprise - en-us
       InstallerPath: https://officecdn.microsoft.com/pr/wsus/setup.exe
       InstalledCheckFilePath: C:\Program Files\Microsoft Office\root\Office16\WINWORD.EXE
-      Version: "16.0.20026.20140"
+      Version: latest
       Arguments: /configure Office-WordExcelOutlook.xml
       WorkingDirectory: C:\ANS\Installers\Office
       PreAction: Get-AppxPackage -AllUsers -Name Microsoft.MicrosoftOfficeHub -ErrorAction SilentlyContinue | Remove-AppxPackage -AllUsers -ErrorAction SilentlyContinue; Get-AppxProvisionedPackage -Online | Where-Object { $_.DisplayName -eq 'Microsoft.MicrosoftOfficeHub' } | Remove-AppxProvisionedPackage -Online -AllUsers -ErrorAction SilentlyContinue | Out-Null; if (-not (Test-Path 'C:\ANS\Installers\Office')) { New-Item -Path 'C:\ANS\Installers\Office' -ItemType Directory -Force | Out-Null }; Invoke-WebRequest -Uri 'https://officecdn.microsoft.com/pr/wsus/setup.exe' -OutFile 'C:\ANS\Installers\Office\setup.exe' -UseBasicParsing; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master/.configurations/resources/Office-RemoveAll.xml' -OutFile 'C:\ANS\Installers\Office\Office-RemoveAll.xml' -UseBasicParsing; Invoke-WebRequest -Uri 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master/.configurations/resources/Office-WordExcelOutlook.xml' -OutFile 'C:\ANS\Installers\Office\Office-WordExcelOutlook.xml' -UseBasicParsing; & 'C:\ANS\Installers\Office\setup.exe' /configure 'C:\ANS\Installers\Office\Office-RemoveAll.xml'
@@ -31,7 +31,7 @@ resources:
       Name: Google Chrome
       InstallerPath: https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi
       InstalledCheckFilePath: C:\Program Files\Google\Chrome\Application\chrome.exe
-      Version: "149.0.7827.115"
+      Version: latest
       Arguments: /quiet /norestart
       PatchOnly: false
 
@@ -86,7 +86,7 @@ resources:
       Name: HHD Software Free Hex Editor Neo 8.06
       InstallerPath: https://hhdsoftware.com/download/free-hex-editor-neo.exe
       InstalledCheckFilePath: C:\Program Files\HHD Software\Free Hex Editor Neo\HexFrame.exe
-      Version: "8.06.00.9387"
+      Version: latest
       Arguments: -silent -machine
       PatchOnly: false
 
@@ -112,6 +112,17 @@ resources:
       Arguments: /VERYSILENT /NORESTART /MERGETASKS=!runcode,addcontextmenufiles,addcontextmenufolders,addtopath
       PatchOnly: false
 
+  - name: InstallGitHubDesktop
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: GitHub Desktop
+      InstallerPath: https://github.com/desktop/desktop/releases/latest/download/GitHubDesktopSetup-x64.msi
+      InstalledCheckFilePath: C:\Program Files\GitHub Desktop\GitHubDesktop.exe
+      Version: latest
+      Arguments: /qn /norestart
+      PatchOnly: false
+
   - name: InstallOllama
     type: AppNetOnline.Pinned/App
     properties:
@@ -119,7 +130,7 @@ resources:
       Name: Ollama version 0.30.4
       InstallerPath: https://ollama.com/download/OllamaSetup.exe
       InstalledCheckFilePath: C:\Program Files\Ollama\ollama.exe
-      Version: "0.30.4"
+      Version: latest
       Arguments: /VERYSILENT /SUPPRESSMSGBOXES /ALLUSERS /NORESTART
       PostAction: Stop-Process -Name 'ollama app','ollama' -Force -ErrorAction SilentlyContinue
       PatchOnly: false
