@@ -74,6 +74,7 @@ resources:
       Ensure: Present
       Name: ExamDiff 1.9.4 (Build 1.9.4.2)
       InstallerPath: https://www.prestosoft.com/download/ed194_setup.exe
+      InstalledCheckFilePath: C:\Program Files\ExamDiff\ExamDiff.exe
       Version: "1.9.4.2"
       Arguments: /VERYSILENT /NORESTART
       PatchOnly: false
@@ -95,6 +96,7 @@ resources:
       Ensure: Present
       Name: 7-Zip 26.01 (x64 edition)
       InstallerPath: https://github.com/ip7z/7zip/releases/download/26.01/7z2601-x64.msi
+      InstalledCheckFilePath: C:\Program Files\7-Zip\7zFM.exe
       Version: "26.01"
       Arguments: /qn /norestart
       PatchOnly: false
@@ -105,6 +107,7 @@ resources:
       Ensure: Present
       Name: Microsoft Visual Studio Code
       InstallerPath: https://update.code.visualstudio.com/1.123.0/win32-x64/stable
+      InstalledCheckFilePath: C:\Program Files\Microsoft VS Code\Code.exe
       Version: "1.123.0"
       Arguments: /VERYSILENT /NORESTART /MERGETASKS=!runcode,addcontextmenufiles,addcontextmenufolders,addtopath
       PatchOnly: false
@@ -138,6 +141,7 @@ resources:
       Ensure: Present
       Name: Visual Studio Enterprise 2017
       InstallerPath: https://aka.ms/vs/15/release/vs_enterprise.exe
+      InstalledCheckFilePath: C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\devenv.exe
       Version: latest
       Arguments: --quiet --wait --norestart --nocache --installPath "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise"
       PatchOnly: false
@@ -150,6 +154,7 @@ resources:
       Ensure: Present
       Name: Visual Studio Enterprise 2022
       InstallerPath: https://aka.ms/vs/17/release/vs_enterprise.exe
+      InstalledCheckFilePath: C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\IDE\devenv.exe
       Version: latest
       Arguments: --quiet --wait --norestart --nocache --installPath "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
       PatchOnly: false
