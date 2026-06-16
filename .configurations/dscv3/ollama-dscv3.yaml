@@ -19,5 +19,5 @@ resources:
       Name: GitHub Desktop
       InstallerPath: https://github.com/desktop/desktop/releases/download/release-3.5.12/GitHubDesktopSetup-x64.msi
       Version: "3.5.12"
-      Arguments: /quiet /norestart
+      Arguments: /quiet /norestart ALLUSERS=1
       PatchOnly: false
