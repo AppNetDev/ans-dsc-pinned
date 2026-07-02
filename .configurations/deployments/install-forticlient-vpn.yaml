@@ -7,7 +7,7 @@ resources:
       Name: FortiClient VPN
       InstallerPath: https://media.githubusercontent.com/media/AppNetDev/ans-dsc-pinned/master/.configurations/resources/FortiClientVPN_7.4.3.4726.msi
       Version: "7.4.3.4726"
-      Arguments: /quiet /norestart REBOOT=ReallySuppress
+      Arguments: '/quiet /norestart REBOOT=ReallySuppress /L*v "C:\ProgramData\FortiClientVPN-install.log"'
       PatchOnly: false
       FileHash: 2FE29AF9D323100D1BF94A78A267A36CD70C338F99258A67329675484650A2C7
       HashAlgorithm: SHA256
