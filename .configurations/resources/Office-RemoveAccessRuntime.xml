@@ -1,0 +1,7 @@
+<Configuration>
+  <Remove All="FALSE">
+    <Product ID="AccessRuntimeRetail" />
+  </Remove>
+  <Display Level="None" AcceptEULA="TRUE" />
+  <Property Name="FORCEAPPSHUTDOWN" Value="TRUE" />
+</Configuration>

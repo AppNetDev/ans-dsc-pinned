@@ -4,6 +4,7 @@
       <Language ID="en-us" />
       <ExcludeApp ID="Groove" />
       <ExcludeApp ID="Lync" />
+      <ExcludeApp ID="OneDrive" />
       <ExcludeApp ID="OneNote" />
       <ExcludeApp ID="Publisher" />
       <ExcludeApp ID="Teams" />
