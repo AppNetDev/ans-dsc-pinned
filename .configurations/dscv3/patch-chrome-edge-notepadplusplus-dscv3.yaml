@@ -6,7 +6,7 @@ resources:
       Ensure: Present
       Name: Google Chrome
       InstallerPath: https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi
-      Version: latest
+      Version: "151.0.7922.47"
       Arguments: /quiet /norestart
       PatchOnly: true
 
@@ -16,7 +16,7 @@ resources:
       Ensure: Present
       Name: Microsoft Edge
       InstallerPath: https://go.microsoft.com/fwlink/?linkid=2093437
-      Version: latest
+      Version: "150.0.4078.105"
       Arguments: /quiet /norestart
       PatchOnly: true
 
