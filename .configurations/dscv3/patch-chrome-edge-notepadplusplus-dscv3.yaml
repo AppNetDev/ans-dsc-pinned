@@ -1,0 +1,31 @@
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+resources:
+  - name: UpdateChrome
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: Google Chrome
+      InstallerPath: https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi
+      Version: latest
+      Arguments: /quiet /norestart
+      PatchOnly: true
+
+  - name: UpdateEdge
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: Microsoft Edge
+      InstallerPath: https://go.microsoft.com/fwlink/?linkid=2093437
+      Version: latest
+      Arguments: /quiet /norestart
+      PatchOnly: true
+
+  - name: UpdateNotepadPlusPlus
+    type: AppNetOnline.Pinned/App
+    properties:
+      Ensure: Present
+      Name: Notepad++ (64-bit x64)
+      InstallerPath: https://github.com/notepad-plus-plus/notepad-plus-plus/releases/download/v8.9.7/npp.8.9.7.Installer.x64.exe
+      Version: "8.9.7"
+      Arguments: /S
+      PatchOnly: true
