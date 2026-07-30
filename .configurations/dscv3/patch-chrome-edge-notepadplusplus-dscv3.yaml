@@ -6,7 +6,7 @@ resources:
       Ensure: Present
       Name: Google Chrome
       InstallerPath: https://dl.google.com/dl/chrome/install/googlechromestandaloneenterprise64.msi
-      Version: "151.0.7922.47"
+      Version: "151.0.7922.72"
       Arguments: /quiet /norestart
       PatchOnly: true
 
