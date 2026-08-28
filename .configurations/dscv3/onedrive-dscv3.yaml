@@ -10,3 +10,18 @@ resources:
       Version: latest
       Arguments: /allusers /silent
       PatchOnly: false
+      PreAction: |
+        $userScopedOneDrive = Get-ChildItem -Path "$env:SystemDrive\Users\*\AppData\Local\Microsoft\OneDrive\OneDrive.exe" -File -Force -ErrorAction SilentlyContinue
+        foreach ($oneDriveExecutable in $userScopedOneDrive) {
+          $oneDriveSetupPath = Join-Path -Path $oneDriveExecutable.DirectoryName -ChildPath 'Update\OneDriveSetup.exe'
+          if (-not (Test-Path -LiteralPath $oneDriveSetupPath -PathType Leaf)) {
+            throw "The per-user OneDrive uninstaller was not found at [$oneDriveSetupPath]."
+          }
+
+          $uninstallProcess = Start-Process -FilePath $oneDriveSetupPath -ArgumentList '/uninstall', '/silent' -Wait -PassThru
+          if ($uninstallProcess.ExitCode -ne 0) {
+            throw "OneDrive per-user uninstall failed for [$($oneDriveExecutable.FullName)] with exit code [$($uninstallProcess.ExitCode)]."
+          }
+        }
+        New-Item -Path 'HKLM:\Software\Microsoft\OneDrive' -Force | Out-Null
+        New-ItemProperty -Path 'HKLM:\Software\Microsoft\OneDrive' -Name 'AllUsersInstall' -PropertyType DWord -Value 1 -Force | Out-Null
