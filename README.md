@@ -1,6 +1,6 @@
 # Pinned
 
-[![Version](https://img.shields.io/badge/version-4.1.4-blue?style=flat-square)](https://github.com/AppNetDev/ans-dsc-pinned/releases)
+[![Version](https://img.shields.io/badge/version-4.1.5-blue?style=flat-square)](https://github.com/AppNetDev/ans-dsc-pinned/releases)
 [![Platform](https://img.shields.io/badge/platform-Windows-0078D4?style=flat-square&logo=windows&logoColor=white)](https://github.com/AppNetDev/ans-dsc-pinned)
 [![PowerShell](https://img.shields.io/badge/PowerShell-5.1%2B-5391FE?style=flat-square&logo=powershell&logoColor=white)](https://github.com/PowerShell/PowerShell)
 [![License](https://img.shields.io/badge/license-Proprietary-red?style=flat-square)](https://github.com/AppNetDev/ans-dsc-pinned)
@@ -74,6 +74,8 @@ iex "& { $(irm 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/maste
 # Pin to a specific release
 iex "& { $(irm 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master/examples/dscv3/Install-PinnedDscV3.ps1') } -ResourcePackageUri 'https://github.com/AppNetDev/ans-dsc-pinned/releases/download/v4.0.6-dscv3/Pinned.DSCv3.4.0.6.zip'"
 ```
+
+Fresh installations resolve the latest stable DSC release from GitHub (currently **3.3.0**, released September 17, 2026). The bootstrap supports both the DSC 3.3 Registry manifest collection and the single-resource manifest used by earlier releases. It reuses an existing usable DSC installation; rerunning it does not automatically upgrade DSC. To install a newer runtime explicitly, use `Install-DscV3Standalone.ps1 -Version latest` first, then rerun the Pinned bootstrap. Use `-DscVersion v3.3.0` on the Pinned bootstrap to select that runtime when installation is needed.
 
 Default install locations:
 

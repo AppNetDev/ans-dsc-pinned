@@ -1,5 +1,5 @@
 @{
-    ModuleVersion        = '4.1.4'
+    ModuleVersion        = '4.1.5'
     GUID                 = 'a39e5014-b98f-4df3-ac52-feda586babe8'
     Author               = 'Jarod Roberts (github.com/Sir-Jigston)'
     CompanyName          = ''
@@ -20,6 +20,11 @@
             LicenseUri   = ''
             ProjectUri   = 'https://github.com/AppNetOnline/ans-dsc-pinned'
             ReleaseNotes = @'
+4.1.5
+- Fixed DSC 3.3 bootstrap compatibility with registry.dsc.manifests.json while retaining support for earlier Registry manifests.
+- Removed stale copied Registry manifests during runtime upgrades and downgrades to avoid duplicate resource discovery.
+- Added Registry bootstrap regression tests and documented DSC runtime upgrade behavior.
+
 4.1.4
 - Updated deployment configs to use Version=latest for stable/latest installer URLs.
 - Added GitHub Desktop deployment entries that use the machine-wide MSI installer.

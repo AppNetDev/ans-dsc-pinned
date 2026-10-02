@@ -216,6 +216,25 @@ Function Test-DscExecutable {
     }
 };
 
+Function Get-DscRegistryManifestPath {
+    [CmdletBinding()]
+    Param(
+        [Parameter(Mandatory)]
+        [string] $DscPath
+    )
+
+    $dscDirectory = Split-Path -Parent $DscPath
+    # DSC 3.3 bundles multiple Registry resources in a single manifest collection.
+    foreach ($manifestName in @('registry.dsc.manifests.json', 'registry.dsc.resource.json')) {
+        $manifestPath = Join-Path $dscDirectory $manifestName
+        if (Test-Path -LiteralPath $manifestPath -PathType Leaf) {
+            return $manifestPath
+        }
+    }
+
+    return $null
+};
+
 Function Test-DscBundledResources {
     Param(
         [Parameter(Mandatory)]
@@ -224,8 +243,9 @@ Function Test-DscBundledResources {
     )
 
     $dscDirectory = Split-Path -Parent $Path
-    $registryManifest = Join-Path $dscDirectory 'registry.dsc.resource.json'
-    Return (Test-Path -LiteralPath $registryManifest -PathType Leaf)
+    $registryManifest = Get-DscRegistryManifestPath -DscPath $Path
+    $registryExecutable = Join-Path $dscDirectory 'registry.exe'
+    Return ($null -ne $registryManifest -and (Test-Path -LiteralPath $registryExecutable -PathType Leaf))
 };
 
 Function Test-DscWindowsAppsAlias {
@@ -362,6 +382,7 @@ Function Install-PinnedDscV3Resource {
 };
 
 Function Install-DscRegistryResource {
+    [CmdletBinding()]
     Param(
         [Parameter(Mandatory)]
         [string]
@@ -373,11 +394,11 @@ Function Install-DscRegistryResource {
     )
 
     $dscDirectory = Split-Path -Parent $DscPath
-    $registryManifest = Join-Path $dscDirectory 'registry.dsc.resource.json'
+    $registryManifest = Get-DscRegistryManifestPath -DscPath $DscPath
     $registryExecutable = Join-Path $dscDirectory 'registry.exe'
 
-    If (-not (Test-Path -LiteralPath $registryManifest -PathType Leaf)) {
-        throw "DSC Registry resource manifest was not found at '$registryManifest'."
+    If (-not $registryManifest) {
+        throw "DSC Registry resource manifest was not found in '$dscDirectory'. Expected registry.dsc.manifests.json (DSC 3.3+) or registry.dsc.resource.json (earlier releases)."
     };
 
     If (-not (Test-Path -LiteralPath $registryExecutable -PathType Leaf)) {
@@ -396,6 +417,18 @@ Function Install-DscRegistryResource {
 
     Copy-Item -LiteralPath $registryManifest -Destination $registryResourceDirectory -Force
     Copy-Item -LiteralPath $registryExecutable -Destination $registryResourceDirectory -Force
+
+    # Remove only the alternate manifest from our managed copy after an upgrade/downgrade.
+    # The source DSC installation is left intact.
+    $installedManifestName = Split-Path -Leaf $registryManifest
+    foreach ($manifestName in @('registry.dsc.manifests.json', 'registry.dsc.resource.json')) {
+        if ($manifestName -ne $installedManifestName) {
+            $staleManifestPath = Join-Path $registryResourceDirectory $manifestName
+            if (Test-Path -LiteralPath $staleManifestPath -PathType Leaf) {
+                Remove-Item -LiteralPath $staleManifestPath -Force
+            }
+        }
+    }
 
     Return $registryResourceDirectory
 };
