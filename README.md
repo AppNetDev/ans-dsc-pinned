@@ -115,6 +115,13 @@ dsc config set  --file "$env:TEMP\apps.yaml"
 
 ---
 
+### SentinelOne recovery
+
+Use the [SentinelOne repair configuration](.configurations/dscv3/sentinelone-repair-dscv3.yaml)
+and [runner instructions](examples/dscv3/SentinelOneRepair.md) to recover the service,
+install missing agent binaries from the ConnectWise MSI, or explicitly request a bind
+with a runtime site token.
+
 ## Quick Start — Classic DSC
 
 ### Installation

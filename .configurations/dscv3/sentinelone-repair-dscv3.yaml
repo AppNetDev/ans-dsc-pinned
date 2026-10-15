@@ -1,0 +1,21 @@
+# Secrets are supplied through the runner's process environment, never YAML or DSC state.
+# Ready represents local recovery / bind request acceptance, not portal enrollment.
+$schema: https://aka.ms/dsc/schemas/v3/bundled/config/document.json
+parameters:
+  Reenroll:
+    type: bool
+    defaultValue: false
+  RequestId:
+    type: string
+    defaultValue: ''
+  InstallerUri:
+    type: string
+    defaultValue: https://cwa.connectwise.com/tools/sentinelone/SentinelOneAgent-Windows_64bit.msi
+resources:
+  - name: RepairSentinelOne
+    type: AppNetOnline.Pinned/SentinelOneRepair
+    properties:
+      Ready: true
+      Reenroll: "[parameters('Reenroll')]"
+      RequestId: "[parameters('RequestId')]"
+      InstallerUri: "[parameters('InstallerUri')]"

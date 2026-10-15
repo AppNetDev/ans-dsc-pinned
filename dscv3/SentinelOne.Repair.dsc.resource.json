@@ -1,0 +1,24 @@
+{
+  "$schema": "https://raw.githubusercontent.com/PowerShell/DSC/main/schemas/v3.1.0/resource/manifest.json",
+  "type": "AppNetOnline.Pinned/SentinelOneRepair",
+  "version": "1.0.0",
+  "description": "Recovers SentinelOne locally and optionally issues one bind per request ID. Does not verify portal enrollment.",
+  "get": { "executable": "SentinelOne.Repair.cmd", "args": ["get"], "input": "stdin" },
+  "set": { "executable": "SentinelOne.Repair.cmd", "args": ["set"], "input": "stdin", "implementsPretest": true, "return": "state" },
+  "schema": {
+    "embedded": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "Ready": { "type": "boolean" },
+        "Reenroll": { "type": "boolean", "default": false },
+        "RequestId": { "type": "string", "default": "" },
+        "InstallerUri": { "type": "string", "pattern": "^https://" },
+        "Enrollment": { "type": "string", "readOnly": true },
+        "BindCommandAccepted": { "type": "boolean", "readOnly": true }
+      },
+      "required": ["Ready"]
+    }
+  }
+}
