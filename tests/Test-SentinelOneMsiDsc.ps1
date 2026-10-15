@@ -38,6 +38,49 @@ try {
     $packageHash = (Get-FileHash -LiteralPath $fakeMsi -Algorithm SHA256).Hash
     Assert-Rejected { Get-SentinelOneMsiPackage -Path $fakeMsi -ExpectedSha256 ('0' * 64) } 'SHA256'
     Assert-Rejected { Get-SentinelOneMsiPackage -Path $fakeMsi -ExpectedSha256 $packageHash } 'valid SentinelOne'
+    # Exercise real Windows Installer COM metadata reads. Only the signature of
+    # this synthetic, non-executable database is stubbed; no installer is run.
+    $metadataPath = Join-Path $testRoot 'MetadataFixture.msi'
+    $installer = $null
+    $database = $null
+    try {
+        $installer = New-Object -ComObject WindowsInstaller.Installer
+        $database = $installer.OpenDatabase($metadataPath, 3)
+        foreach ($sql in @(
+            'CREATE TABLE `Property` (`Property` CHAR(72) NOT NULL, `Value` CHAR(0) LOCALIZABLE PRIMARY KEY `Property`)',
+            "INSERT INTO ``Property`` (``Property``, ``Value``) VALUES ('ProductName', 'Sentinel Agent fixture')",
+            "INSERT INTO ``Property`` (``Property``, ``Value``) VALUES ('ProductVersion', '25.3.1.100')",
+            "INSERT INTO ``Property`` (``Property``, ``Value``) VALUES ('Manufacturer', 'Sentinel Labs, Inc.')"
+        )) {
+            $view = $null
+            try {
+                $view = $database.OpenView($sql)
+                $null = $view.Execute()
+            }
+            finally {
+                if ($null -ne $view) {
+                    $null = $view.Close()
+                    $null = [Runtime.InteropServices.Marshal]::FinalReleaseComObject($view)
+                }
+            }
+        }
+        $null = $database.Commit()
+    }
+    finally {
+        if ($null -ne $database) { $null = [Runtime.InteropServices.Marshal]::FinalReleaseComObject($database) }
+        if ($null -ne $installer) { $null = [Runtime.InteropServices.Marshal]::FinalReleaseComObject($installer) }
+    }
+    function Get-AuthenticodeSignature {
+        param([string] $LiteralPath)
+        if ($LiteralPath -ne $metadataPath) { throw 'Signature fixture used for an unexpected file.' }
+        [pscustomobject]@{ Status = 'Valid'; SignerCertificate = [pscustomobject]@{ Subject = 'CN=Sentinel Labs, Inc.' } }
+    }
+    try {
+        $metadataItems = @(Get-SentinelOneMsiPackage -Path $metadataPath)
+        Assert-Condition ($metadataItems.Count -eq 1) 'COM metadata reader must emit exactly one package object, without null method results.'
+        Assert-Condition ($metadataItems[0].Path -eq $metadataPath -and $metadataItems[0].Version -eq '25.3.1.100') 'Real COM metadata must provide Path and Version to the wrapper.'
+    }
+    finally { Remove-Item -LiteralPath Function:\Get-AuthenticodeSignature }
     # Exercise the real timeout implementation while intercepting process creation.
     $script:FakeProcessDisposed = $false
     function Start-Process {
@@ -59,6 +102,12 @@ try {
     foreach ($name in @('SentinelOne.Msi.ps1', 'SentinelOne.Msi.Functions.ps1', 'SentinelOne.Msi.dsc.resource.json')) {
         Copy-Item -LiteralPath (Join-Path $repositoryRoot "dscv3\$name") -Destination (Join-Path $resourceRoot $name)
     }
+    # Isolate fixture locks from real recovery operations and other test processes.
+    $fixtureFunctionsPath = Join-Path $resourceRoot 'SentinelOne.Msi.Functions.ps1'
+    $fixtureMutexName = 'Local\ANS.SentinelOneMsiTest-' + [guid]::NewGuid().ToString('N')
+    $fixtureFunctions = (Get-Content -LiteralPath $fixtureFunctionsPath -Raw).Replace(
+        "'Global\ANS.SentinelOneRepair'", "'$fixtureMutexName'")
+    [IO.File]::WriteAllText($fixtureFunctionsPath, $fixtureFunctions, (New-Object Text.UTF8Encoding($false)))
     $fixturePath = Join-Path $testRoot 'Fixture.json'
     $invocationsPath = Join-Path $testRoot 'MsiInvocations.log'
     $agentPath = Join-Path $testRoot 'SentinelAgent.exe'

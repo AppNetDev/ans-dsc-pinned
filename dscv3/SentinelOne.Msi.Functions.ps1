@@ -38,7 +38,9 @@ function Get-SentinelOneMsiPackage {
             $Record = $null
             try {
                 $View = $Database.OpenView("SELECT ``Value`` FROM ``Property`` WHERE ``Property``='$PropertyName'")
-                $View.Execute()
+                # COM void methods emit explicit null values into PowerShell's
+                # success stream unless captured. Return only the package object.
+                $null = $View.Execute()
                 $Record = $View.Fetch()
                 if ($null -eq $Record) { throw "MSI property $PropertyName is missing." }
                 $Metadata[$PropertyName] = $Record.StringData(1)
@@ -46,7 +48,7 @@ function Get-SentinelOneMsiPackage {
             finally {
                 if ($null -ne $Record) { $null = [Runtime.InteropServices.Marshal]::FinalReleaseComObject($Record) }
                 if ($null -ne $View) {
-                    $View.Close()
+                    $null = $View.Close()
                     $null = [Runtime.InteropServices.Marshal]::FinalReleaseComObject($View)
                 }
             }
