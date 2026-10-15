@@ -25,10 +25,21 @@
     for this runner and its companion files.
 .PARAMETER WorkingDirectory
     Parent directory for unique, protected staging directories.
+.PARAMETER Mode
+    Repair restores service state / optionally binds. Upgrade uses the MSI resource
+    to upgrade an existing agent without direct service configuration or ACL changes.
+.PARAMETER InstallerPath
+    Optional local approved MSI for Upgrade. Otherwise InstallerUri is downloaded.
+.PARAMETER ExpectedSha256
+    Optional trusted package hash for Upgrade. Signature validation is always required.
 .EXAMPLE
     .\Invoke-DscV3SentinelOneRepair.ps1 -SiteToken $SiteToken
 .EXAMPLE
     .\Invoke-DscV3SentinelOneRepair.ps1 -SiteToken $SiteToken -Reenroll -RequestId 'CHG-12345' -AgentPassphrase $Passphrase
+.EXAMPLE
+    .\Invoke-DscV3SentinelOneRepair.ps1 -Mode Upgrade -TestOnly
+.EXAMPLE
+    .\Invoke-DscV3SentinelOneRepair.ps1 -Mode Upgrade -InstallerPath $ApprovedMsiPath -ExpectedSha256 $ApprovedSha256
 .NOTES
     Secrets are scoped to the child process environment and restored afterward. Native
     MSI/SentinelCtl arguments can still be captured by privileged process auditing.
@@ -36,11 +47,16 @@
 #>
 [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
 param(
+    [ValidateSet('Repair', 'Upgrade')][string] $Mode = 'Repair',
     [string] $SiteToken = $env:SENTINELONE_SITE_TOKEN,
     [securestring] $AgentPassphrase,
     [switch] $Reenroll,
     [string] $RequestId = '',
     [uri] $InstallerUri = 'https://cwa.connectwise.com/tools/sentinelone/SentinelOneAgent-Windows_64bit.msi',
+    [string] $InstallerPath,
+    [ValidatePattern('^[a-fA-F0-9]{64}$')][string] $ExpectedSha256,
+    [ValidateRange(5, 300)][int] $HealthTimeoutSeconds = 60,
+    [ValidateRange(30, 7200)][int] $MsiTimeoutSeconds = 900,
     [switch] $TestOnly,
     [uri] $SourceBaseUri = 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master',
     [ValidateNotNullOrEmpty()]
@@ -72,13 +88,22 @@ function Initialize-SentinelOneDscSource {
     }
     Set-Acl -LiteralPath $root -AclObject $acl
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
-    foreach ($relativePath in @(
+    $relativePaths = @(
         'dscv3/SentinelOne.Repair.ps1',
         'dscv3/SentinelOne.Repair.cmd',
         'dscv3/SentinelOne.Repair.dsc.resource.json',
         '.configurations/dscv3/sentinelone-repair-dscv3.yaml',
         'examples/dscv3/Install-DscV3Standalone.ps1'
-    )) {
+    )
+    if ($Mode -eq 'Upgrade') {
+        $relativePaths += @(
+            'Install-SentinelOneAgentDscV3.ps1',
+            'dscv3/SentinelOne.Msi.ps1',
+            'dscv3/SentinelOne.Msi.Functions.ps1',
+            'dscv3/SentinelOne.Msi.dsc.resource.json'
+        )
+    }
+    foreach ($relativePath in $relativePaths) {
         $destination = Join-Path $root $relativePath
         $null = New-Item -ItemType Directory -Path (Split-Path -Parent $destination) -Force
         $downloadParameters = @{
@@ -94,6 +119,8 @@ function Initialize-SentinelOneDscSource {
     return $root
 }
 
+if ($Mode -eq 'Upgrade' -and $Reenroll) { throw 'Upgrade preserves enrollment. Run a separate explicit Repair/Reenroll only after the agent is healthy.' }
+if ($Mode -eq 'Repair' -and ($InstallerPath -or $ExpectedSha256)) { throw 'InstallerPath and ExpectedSha256 require Mode Upgrade.' }
 if ($Reenroll -and [string]::IsNullOrWhiteSpace($RequestId)) {
     $RequestId = [guid]::NewGuid().ToString('D')
 }
@@ -110,6 +137,14 @@ if (-not [string]::IsNullOrWhiteSpace($PSScriptRoot)) {
             '.configurations\dscv3\sentinelone-repair-dscv3.yaml',
             'examples\dscv3\Install-DscV3Standalone.ps1'
         )
+        if ($Mode -eq 'Upgrade') {
+            $requiredFiles += @(
+                'Install-SentinelOneAgentDscV3.ps1',
+                'dscv3\SentinelOne.Msi.ps1',
+                'dscv3\SentinelOne.Msi.Functions.ps1',
+                'dscv3\SentinelOne.Msi.dsc.resource.json'
+            )
+        }
         $missingFiles = @($requiredFiles | Where-Object { -not (Test-Path -LiteralPath (Join-Path $candidateRoot $_) -PathType Leaf) })
         if ($missingFiles.Count -eq 0) { $repositoryRoot = $candidateRoot }
     }
@@ -124,11 +159,27 @@ if ($null -eq $dscCommand) {
     $dscPath = 'C:\ANS\DSC\dsc.exe'
     if (-not (Test-Path -LiteralPath $dscPath -PathType Leaf)) {
         if ($WhatIfPreference) { throw 'DSC is missing. Install DSC first, or run without WhatIf to bootstrap it.' }
-        & (Join-Path $repositoryRoot 'examples\dscv3\Install-DscV3Standalone.ps1') -Scope AllUsers -InstallDirectory 'C:\ANS\DSC'
+        & (Join-Path $repositoryRoot 'examples\dscv3\Install-DscV3Standalone.ps1') -Scope AllUsers -InstallDirectory 'C:\ANS\DSC' | Out-Null
         if (-not (Test-Path -LiteralPath $dscPath -PathType Leaf)) { throw 'DSC bootstrap did not produce dsc.exe.' }
     }
 } else {
     $dscPath = $dscCommand.Source
+}
+if ($Mode -eq 'Upgrade') {
+    $upgradeParameters = @{
+        InstallerUri = $InstallerUri
+        Operation = $(if ($TestOnly) { 'Test' } else { 'Set' })
+        DscPath = $dscPath
+        WorkingDirectory = $WorkingDirectory
+        SourceBaseUri = $SourceBaseUri
+        HealthTimeoutSeconds = $HealthTimeoutSeconds
+        MsiTimeoutSeconds = $MsiTimeoutSeconds
+        WhatIf = [bool] $WhatIfPreference
+    }
+    if ($InstallerPath) { $upgradeParameters.InstallerPath = $InstallerPath }
+    if ($ExpectedSha256) { $upgradeParameters.ExpectedSha256 = $ExpectedSha256 }
+    & (Join-Path $repositoryRoot 'Install-SentinelOneAgentDscV3.ps1') @upgradeParameters
+    return
 }
 $oldToken = $env:SENTINELONE_SITE_TOKEN
 $oldPassphrase = $env:SENTINELONE_AGENT_PASSPHRASE

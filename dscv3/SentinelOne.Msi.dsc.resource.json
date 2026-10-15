@@ -1,0 +1,59 @@
+{
+  "$schema": "https://aka.ms/dsc/schemas/v3/bundled/resource/manifest.json",
+  "type": "AppNet.SentinelOne/MsiUpgrade",
+  "version": "1.0.0",
+  "description": "Upgrade an existing SentinelOne Windows agent using an approved signed MSI; verify local health without changing service ACLs.",
+  "get": {
+    "executable": "powershell.exe",
+    "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", "SentinelOne.Msi.ps1", "-Operation", "Get"],
+    "input": "stdin"
+  },
+  "test": {
+    "executable": "powershell.exe",
+    "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", "SentinelOne.Msi.ps1", "-Operation", "Test"],
+    "input": "stdin",
+    "return": "state"
+  },
+  "set": {
+    "executable": "powershell.exe",
+    "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", "SentinelOne.Msi.ps1", "-Operation", "Set"],
+    "input": "stdin",
+    "implementsPretest": true,
+    "return": "state"
+  },
+  "whatIf": {
+    "executable": "powershell.exe",
+    "args": ["-NoLogo", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File", "SentinelOne.Msi.ps1", "-Operation", "Get"],
+    "input": "stdin",
+    "return": "state"
+  },
+  "schema": {
+    "embedded": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "type": "object",
+      "required": ["PackagePath", "PackageVersion", "PackageSha256", "LogDirectory", "ReceiptPath", "HealthTimeoutSeconds", "Healthy"],
+      "additionalProperties": false,
+      "properties": {
+        "PackagePath": {"type": "string", "minLength": 1},
+        "PackageVersion": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(?:\\.\\d+)?$"},
+        "PackageSha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
+        "LogDirectory": {"type": "string", "minLength": 1},
+        "ReceiptPath": {"type": "string", "minLength": 1},
+        "HealthTimeoutSeconds": {"type": "integer", "minimum": 5, "maximum": 300},
+        "MsiTimeoutSeconds": {"type": "integer", "minimum": 30, "maximum": 7200},
+        "Healthy": {"type": "boolean"},
+        "InstalledVersion": {"type": "string"},
+        "ServiceState": {"type": "string"},
+        "StartMode": {"type": "string"},
+        "AgentLoaded": {"type": "boolean"},
+        "SelfProtection": {"type": "string"},
+        "RestartRequired": {"type": "boolean"},
+        "InstallerExitCode": {"type": ["integer", "null"]},
+        "Enrollment": {"type": "string"},
+        "Outcome": {"type": "string"},
+        "LogPath": {"type": "string"},
+        "_inDesiredState": {"type": "boolean"}
+      }
+    }
+  }
+}

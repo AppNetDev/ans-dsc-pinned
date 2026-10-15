@@ -1,5 +1,27 @@
 # SentinelOne repair / re-enrollment (DSC v3)
 
+For an existing unhealthy agent or denied service-configuration access, use the
+MSI upgrade mode. It delegates recovery to the vendor MSI without directly changing
+service startup or service ACLs. It requires an approved package newer than the
+installed version when the agent is unhealthy; it does not force a same-version repair.
+
+```powershell
+$baseUri = 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master'
+$runner = (Invoke-WebRequest -Uri "$baseUri/examples/dscv3/Invoke-DscV3SentinelOneRepair.ps1" -UseBasicParsing).Content
+$test = & ([scriptblock]::Create($runner)) -Mode Upgrade -TestOnly -SourceBaseUri $baseUri
+$test | Format-List
+
+# After validating the selected version is approved and newer, pin the tested package:
+& ([scriptblock]::Create($runner)) -Mode Upgrade -ExpectedSha256 $test.PackageSha256 -SourceBaseUri $baseUri
+```
+
+Override the default ConnectWise MSI URL with `-InstallerUri`, or supply
+`-InstallerPath` for a local MSI. `-Mode Upgrade` preserves enrollment and cannot be
+combined with `-Reenroll`. Its result includes `Healthy`, `UpgradeAvailable`,
+`RestartRequired`, actual package/installed versions, and configuration/result/error
+paths. See [MSI recovery details](../../dscv3/README.md). Existing service/bind behavior
+remains the default `-Mode Repair`, described below.
+
 Run from an elevated PowerShell session or RMM SYSTEM context. No local checkout is
 required. After these files are published to GitHub, fetch and execute the runner:
 

@@ -121,6 +121,9 @@ Use the [SentinelOne repair configuration](.configurations/dscv3/sentinelone-rep
 and [runner instructions](examples/dscv3/SentinelOneRepair.md) to recover the service,
 install missing agent binaries from the ConnectWise MSI, or explicitly request a bind
 with a runtime site token.
+For an existing unhealthy agent, `-Mode Upgrade -TestOnly` tests a signed MSI target;
+`-Mode Upgrade` applies an approved newer package through the vendor installer.
+See [MSI upgrade recovery](dscv3/README.md) for validation and reboot behavior.
 
 ## Quick Start — Classic DSC
 
