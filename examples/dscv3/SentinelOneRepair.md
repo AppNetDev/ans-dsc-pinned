@@ -11,6 +11,10 @@ DSC if needed. It preserves enrollment, returns health/restart/log information,
 and never restarts Windows automatically. A healthy target/newer agent is
 unchanged; an unhealthy same/newer agent requires provider-assisted recovery.
 No token or passphrase is needed. This entry point does not re-enroll the agent.
+If Windows has a pending servicing or Windows Update restart, it reports
+`Outcome: WindowsRestartPending` and `RestartRequired: True`, explains that you
+must restart and rerun, and skips recovery before downloading files. This is a
+normal result, not a DSC failure. The MSI resource also checks before installation.
 For a version/hash-pinned package, use the parameterized runner below.
 
 For an existing unhealthy agent or denied service-configuration access, use the

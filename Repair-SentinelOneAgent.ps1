@@ -27,6 +27,19 @@ param()
     $ErrorActionPreference = 'Stop'
     $ProgressPreference = 'SilentlyContinue'
     if (-not [Environment]::Is64BitProcess) { throw 'Run recovery in 64-bit PowerShell.' }
+    if ((Test-Path -LiteralPath 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending') -or
+        (Test-Path -LiteralPath 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired')) {
+        $message = 'Windows has a pending restart. SentinelOne recovery was skipped. Restart Windows during an approved window, then rerun this command.'
+        Write-Warning $message
+        [pscustomobject]@{
+            Operation = 'Skipped'
+            Outcome = 'WindowsRestartPending'
+            RestartRequired = $true
+            InstallerExitCode = $null
+            Message = $message
+        }
+        return
+    }
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
     $sourceBaseUri = 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master'

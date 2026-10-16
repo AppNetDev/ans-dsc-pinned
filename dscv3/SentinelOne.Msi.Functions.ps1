@@ -151,10 +151,11 @@ function Get-SentinelOneMsiState {
     $State.StartMode = 'Unknown'
     $State.AgentLoaded = $false
     $State.SelfProtection = 'Unknown'
-    $State.RestartRequired = $false
+    $State.RestartRequired = [bool] ((Test-Path -LiteralPath 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending') -or
+        (Test-Path -LiteralPath 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired'))
     $State.InstallerExitCode = $null
     $State.Enrollment = 'NotVerified'
-    $State.Outcome = 'NotCompliant'
+    $State.Outcome = if ($State.RestartRequired) { 'WindowsRestartPending' } else { 'NotCompliant' }
     $State.LogPath = ''
 
     if (Test-Path -LiteralPath $Properties.ReceiptPath -PathType Leaf) {
@@ -202,7 +203,9 @@ function Get-SentinelOneMsiState {
             ([version] $State.InstalledVersion -ge [version] $State.PackageAgentVersion)
     }
     if ($State.Healthy) { $State.Outcome = 'HealthyPortalVerificationRequired' }
-    if ($State.RestartRequired) { $State.Outcome = 'RebootRequired' }
+    if ($State.RestartRequired) {
+        $State.Outcome = if ($State.InstallerExitCode -eq 3010) { 'RebootRequired' } else { 'WindowsRestartPending' }
+    }
     return $State
 }
 
@@ -269,10 +272,6 @@ function Invoke-SentinelOneMsiUpgrade {
     }
     if ([version] $State.InstalledVersion -ge [version] $State.PackageAgentVersion) {
         throw 'Agent is unhealthy at the same or a newer version. Supply an approved newer MSI; this resource does not force reinstall or downgrade.'
-    }
-    if ((Test-Path -LiteralPath 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending') -or
-        (Test-Path -LiteralPath 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired')) {
-        throw 'Windows reports a pending restart. Complete the restart before attempting the upgrade.'
     }
     $Package = Get-SentinelOneMsiPackage -Path $Properties.PackagePath -ExpectedSha256 $Properties.PackageSha256
     if ([version] $Package.Version -ne [version] $Properties.PackageVersion) {

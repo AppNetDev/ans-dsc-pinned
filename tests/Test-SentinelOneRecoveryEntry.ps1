@@ -11,6 +11,14 @@ $entryText = Get-Content -LiteralPath $entryPath -Raw
 $script:Passed = 0
 $script:ReturnEmpty = $false
 $script:RunnerFails = $false
+$script:PendingRestartKey = ''
+$script:Downloads = 0
+function Test-Path {
+    param([string] $LiteralPath, [string] $PathType)
+    if ($LiteralPath -like 'HKLM:*') { return $LiteralPath -eq $script:PendingRestartKey }
+    if ($PathType) { return Microsoft.PowerShell.Management\Test-Path -LiteralPath $LiteralPath -PathType $PathType }
+    Microsoft.PowerShell.Management\Test-Path -LiteralPath $LiteralPath
+}
 function Assert-Condition {
     param([bool] $Condition, [string] $Message)
     if (-not $Condition) { throw $Message }
@@ -18,6 +26,7 @@ function Assert-Condition {
 }
 function Invoke-WebRequest {
     param([string] $Uri, [switch] $UseBasicParsing, [int] $TimeoutSec)
+    $script:Downloads++
     if ($Uri -eq 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master/Repair-SentinelOneAgent.ps1') {
         return $entryText
     }
@@ -52,6 +61,18 @@ try {
     Assert-Condition ($result.Mode -eq 'Upgrade' -and $result.Healthy) 'The documented iwr | iex command must work without parameters.'
     $result = & ([scriptblock]::Create($entryText)) -WhatIf
     Assert-Condition $result.Preview 'WhatIf must reach the recovery runner.'
+    foreach ($restartKey in @(
+        'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending',
+        'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Auto Update\RebootRequired'
+    )) {
+        $script:PendingRestartKey = $restartKey
+        $beforeDownloads = $script:Downloads
+        $warnings = @()
+        $result = & ([scriptblock]::Create($entryText)) -WarningVariable warnings -WarningAction SilentlyContinue
+        Assert-Condition ($result.RestartRequired -and $result.Operation -eq 'Skipped' -and $result.Outcome -eq 'WindowsRestartPending') 'A pending restart must return a skipped result without an exception.'
+        Assert-Condition ($script:Downloads -eq $beforeDownloads -and $warnings.Count -ge 1 -and $result.Message -like '*rerun*') 'Pending restart must explain the next action before downloading anything.'
+    }
+    $script:PendingRestartKey = ''
     $script:ReturnEmpty = $true
     $message = ''
     try { Invoke-Expression $entryText | Out-Null } catch { $message = $_.Exception.Message }
@@ -65,4 +86,5 @@ try {
 }
 finally {
     Remove-Item -LiteralPath Function:\Invoke-WebRequest
+    Remove-Item -LiteralPath Function:\Test-Path
 }

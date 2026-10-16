@@ -243,8 +243,11 @@ function Invoke-SentinelOneMsiInstall {
     $fixture.ServiceState = 'Start Pending'
     $fixture.PendingReboot = $true
     Save-Fixture
-    Assert-Rejected { & $wrapper @parameters } 'DSC set failed'
-    Assert-Condition ((Get-InvocationCount) -eq 1) 'Pending Windows reboot must block installation.'
+    foreach ($operation in @('Get', 'Test', 'Set')) {
+        $result = & $wrapper @parameters -Operation $operation -WarningAction SilentlyContinue
+        Assert-Condition ($result.RestartRequired -and $result.Outcome -eq 'WindowsRestartPending' -and $null -eq $result.InstallerExitCode -and $result.Message -like '*skipped*') "$operation must report a pending Windows restart without an MSI/DSC failure."
+        Assert-Condition ((Get-InvocationCount) -eq 1) 'Pending Windows reboot must block installation.'
+    }
     $fixture.PendingReboot = $false
     $fixture.ExitCode = 1603
     Save-Fixture

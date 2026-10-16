@@ -182,9 +182,18 @@ try {
     if ($Result.hadErrors) { throw "DSC reported errors. Results: $($Run.ResultPath)" }
     $ResourceResult = $Result.results[0].result
     $State = if ($DscOperation -eq 'set') { $ResourceResult.afterState } else { $ResourceResult.actualState }
+    $Message = ''
+    if ($State.RestartRequired) {
+        $Message = if ($State.Outcome -eq 'WindowsRestartPending') {
+            'Windows has a pending restart. SentinelOne upgrade was skipped. Restart Windows during an approved window, then rerun recovery.'
+        }
+        else { 'The SentinelOne installer requires a restart. Restart Windows during an approved window, then rerun recovery to verify health.' }
+        Write-Warning $Message
+    }
     [pscustomobject]@{
         Operation = $DscOperation
         Outcome = $State.Outcome
+        Message = $Message
         Healthy = [bool] $State.Healthy
         RestartRequired = [bool] $State.RestartRequired
         InstallerExitCode = $State.InstallerExitCode
