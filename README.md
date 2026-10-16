@@ -205,6 +205,17 @@ backups preserve vendor logs. Backups/manifests are restricted to Administrators
 and SYSTEM under `C:\ANS\SentinelOne\CleanupBackups`; operational logs are under
 `C:\ANS\SentinelOne\Logs`.
 
+Registry backups normally use `reg.exe export`. If that executable fails but the
+key is readable in-process, cleanup falls back to a verified `.registry.clixml`
+snapshot. `Manifest.json` records `BackupFormat: RegistryClixml` and its path.
+The snapshot contains the original registry path, each relative subkey, named and
+default values with their registry kinds, raw expandable strings, and security
+descriptors. A failed or incomplete snapshot still blocks deletion of that target.
+Read snapshots with `Import-Clixml`; they are not files for `reg.exe import`.
+For selective restoration, recreate only the required keys/values using their
+recorded kinds and data; recorded SDDL describes the original permissions. Restore
+only the named SentinelOne values in shared startup keys, not the entire shared key.
+
 Locked/inaccessible targets are retained where backup cannot complete; failed
 deletions may be partial. Backed-up files that resist immediate deletion are
 queued using `MoveFileExW(MOVEFILE_DELAY_UNTIL_REBOOT)`, with files before

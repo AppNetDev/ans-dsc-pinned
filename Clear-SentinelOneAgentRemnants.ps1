@@ -200,6 +200,90 @@ function Initialize-SentinelOneCleanupBackup {
     return $backupRoot
 }
 
+function Export-SentinelOneRegistrySnapshot {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] $Target,
+        [Parameter(Mandatory)][string] $DestinationPath
+    )
+    $providerPath = ConvertTo-SentinelOneCleanupProviderPath -Target $Target
+    $rootKey = Get-Item -LiteralPath $providerPath
+    $records = [Collections.Generic.List[object]]::new()
+    $pending = [Collections.Generic.Stack[string]]::new()
+    $pending.Push('')
+    try {
+        while ($pending.Count) {
+            $relativePath = $pending.Pop()
+            $key = if ($relativePath) { $rootKey.OpenSubKey($relativePath, $false) } else { $rootKey }
+            if ($null -eq $key) { throw 'A registry subkey changed during backup; the target was retained.' }
+            try {
+                $values = @()
+                foreach ($name in $key.GetValueNames()) {
+                    $kind = $key.GetValueKind($name)
+                    if ($kind -eq [Microsoft.Win32.RegistryValueKind]::Unknown) { throw 'An unsupported registry value type prevents a complete backup.' }
+                    $value = $key.GetValue($name, $null, [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames)
+                    if ($null -eq $value) { throw 'A registry value became unreadable during backup; the target was retained.' }
+                    $values += [pscustomobject]@{
+                        Name = $name
+                        Kind = $kind.ToString()
+                        Value = $value
+                    }
+                }
+                $records.Add([pscustomobject]@{
+                    RelativePath = $relativePath
+                    SecurityDescriptor = $key.GetAccessControl().GetSecurityDescriptorSddlForm(
+                        [Security.AccessControl.AccessControlSections]::Access -bor
+                        [Security.AccessControl.AccessControlSections]::Owner -bor
+                        [Security.AccessControl.AccessControlSections]::Group)
+                    Values = $values
+                })
+                foreach ($child in $key.GetSubKeyNames()) {
+                    $pending.Push($(if ($relativePath) { $relativePath + '\' + $child } else { $child }))
+                }
+            }
+            finally { if ($relativePath) { $key.Dispose() } }
+        }
+    }
+    finally { $rootKey.Dispose() }
+    $snapshot = [pscustomobject]@{
+        Schema = 'ANS.RegistrySnapshot/v1'
+        RegistryPath = $Target.Path
+        Keys = $records.ToArray()
+    }
+    Export-Clixml -InputObject $snapshot -LiteralPath $DestinationPath -Depth 32 -Encoding UTF8
+    $verified = Import-Clixml -LiteralPath $DestinationPath
+    if ($verified.Schema -ne $snapshot.Schema -or $verified.RegistryPath -ne $snapshot.RegistryPath -or
+        @($verified.Keys).Count -ne $records.Count -or $records.Count -eq 0) {
+        throw 'Registry snapshot verification failed; the target was retained.'
+    }
+}
+
+function Export-SentinelOneRegistryBackup {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)] $Target,
+        [Parameter(Mandatory)][string] $BasePath,
+        [Parameter(Mandatory)][string] $LogPath
+    )
+    $regPath = $BasePath + '.reg'
+    try {
+        & "$env:SystemRoot\System32\reg.exe" export $Target.Path $regPath /y *> $null
+        if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $regPath -PathType Leaf)) {
+            throw 'reg.exe export did not produce a completed backup.'
+        }
+        return [pscustomobject]@{ Path = $regPath; Format = 'RegExport' }
+    }
+    catch {
+        Add-Content -LiteralPath $LogPath -Encoding UTF8 -Value ("NativeRegistryExportFailed=$($Target.Path); trying=in-process snapshot")
+    }
+    # A failed external executable is not proof that the registry is unreadable.
+    # Preserve typed values, raw expandable strings, subkeys and ACLs in-process.
+    $snapshotPath = $BasePath + '.registry.clixml'
+    Export-SentinelOneRegistrySnapshot -Target $Target -DestinationPath $snapshotPath
+    Add-Content -LiteralPath $LogPath -Encoding UTF8 -Value ("RegistrySnapshotCompleted=$($Target.Path); backup=$snapshotPath")
+    [pscustomobject]@{ Path = $snapshotPath; Format = 'RegistryClixml' }
+}
+
 function Test-SentinelOneUninstallAdministrator {
     [CmdletBinding()]
     param()
@@ -224,6 +308,9 @@ function Get-SentinelOneRegisteredComponents {
             $componentPath = [Environment]::ExpandEnvironmentVariables([string] $component.PathName).TrimStart('"')
             if ($componentPath.StartsWith('\SystemRoot\', [StringComparison]::OrdinalIgnoreCase)) {
                 $componentPath = $env:SystemRoot + $componentPath.Substring(11)
+            }
+            elseif ($componentPath.StartsWith('system32\', [StringComparison]::OrdinalIgnoreCase)) {
+                $componentPath = Join-Path $env:SystemRoot $componentPath
             }
             if ($componentPath.StartsWith('\??\') -or $componentPath.StartsWith('\\?\')) { $componentPath = $componentPath.Substring(4) }
             foreach ($root in $roots) {
@@ -390,18 +477,17 @@ function Invoke-SentinelOneManualCleanup {
                 if (-not (Test-SentinelOneCleanupTarget -Target $target)) { $result.Unchanged++; continue }
                 $index++
                 $backupPath = Join-Path $result.BackupPath ('{0:D3}' -f $index)
+                $backupFormat = 'Directory'
                 if ($target.Kind -eq 'Directory') {
                     Assert-SentinelOneCleanupDirectory -Path $target.Path
                     Copy-Item -LiteralPath $target.Path -Destination $backupPath -Recurse -Force
                 }
                 else {
-                    $backupPath += '.reg'
-                    & "$env:SystemRoot\System32\reg.exe" export $target.Path $backupPath /y *> $null
-                    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $backupPath -PathType Leaf)) {
-                        throw 'Registry export failed; this target was retained.'
-                    }
+                    $registryBackup = Export-SentinelOneRegistryBackup -Target $target -BasePath $backupPath -LogPath $logPath
+                    $backupPath = $registryBackup.Path
+                    $backupFormat = $registryBackup.Format
                 }
-                $manifest += [pscustomobject]@{ Kind = $target.Kind; Path = $target.Path; Name = $target.Name; BackupPath = $backupPath }
+                $manifest += [pscustomobject]@{ Kind = $target.Kind; Path = $target.Path; Name = $target.Name; BackupPath = $backupPath; BackupFormat = $backupFormat }
                 $eligible += $target
             }
             catch {

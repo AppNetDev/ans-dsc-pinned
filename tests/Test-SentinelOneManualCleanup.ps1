@@ -53,13 +53,14 @@ $discovered = @(& {
         param($ClassName)
         if ($ClassName -eq 'Win32_SystemDriver') {
             [pscustomobject]@{ Name = 'SentinelNetworkMonitor'; PathName = '\SystemRoot\system32\drivers\SentinelOne\Fixture\Driver.sys'; State = 'Running' }
+            [pscustomobject]@{ Name = 'SentinelELAM'; PathName = 'system32\DRIVERS\SentinelOne\ELAM\SentinelELAM.sys'; State = 'Stopped' }
             [pscustomobject]@{ Name = 'SentinelUnrelated'; PathName = 'C:\OtherProduct\Driver.sys'; State = 'Running' }
         }
     }
     function Test-Path { param($LiteralPath) return $true }
     Get-SentinelOneRegisteredComponents
 })
-Assert-Condition ($discovered.Count -eq 1 -and $discovered[0].Name -eq 'SentinelNetworkMonitor') 'Driver discovery must recognize native SystemRoot paths and exclude unrelated paths.'
+Assert-Condition ($discovered.Count -eq 2 -and 'SentinelNetworkMonitor' -in $discovered.Name -and 'SentinelELAM' -in $discovered.Name) 'Driver discovery must recognize native SystemRoot and relative system32 paths while excluding unrelated paths.'
 # Compile the native declaration, but never call MoveFileEx in fixture tests.
 $nativeCommand = $ast.Find({ param($node) $node -is [Management.Automation.Language.CommandAst] -and $node.GetCommandName() -eq 'Add-Type' }, $true)
 Add-Type -TypeDefinition ($nativeCommand.CommandElements[2].Value.Replace('namespace ANS.SentinelOneCleanup {', 'namespace ANS.SentinelOneCleanup.SignatureProbe {'))
@@ -114,6 +115,59 @@ function Initialize-Fixture {
 }
 try {
     Initialize-Fixture
+    # The external export fails on this nonexistent HKCU key. In-process reads
+    # use a synthetic RegistryKey tree; no live registry values are changed.
+    $registryTarget = [pscustomobject]@{ Kind = 'Key'; Path = ('HKCU\Software\ANS-RegistryFixture-' + [guid]::NewGuid().ToString('N')); Name = $null }
+    function New-RegistryKeyFixture {
+        param([hashtable] $Values, [hashtable] $Children)
+        $key = [pscustomobject]@{ FixtureValues = $Values; FixtureChildren = $Children; Disposed = $false }
+        $key | Add-Member ScriptMethod GetValueNames { return @($this.FixtureValues.Keys) }
+        $key | Add-Member ScriptMethod GetValueKind { param($Name) return [Microsoft.Win32.RegistryValueKind] $this.FixtureValues[$Name].Kind }
+        $key | Add-Member ScriptMethod GetValue {
+            param($Name, $DefaultValue, $Options)
+            if ($Options -ne [Microsoft.Win32.RegistryValueOptions]::DoNotExpandEnvironmentNames) { throw 'Expandable strings must remain raw.' }
+            return ,$this.FixtureValues[$Name].Value
+        }
+        $key | Add-Member ScriptMethod GetSubKeyNames { return @($this.FixtureChildren.Keys) }
+        $key | Add-Member ScriptMethod OpenSubKey { param($Name, $Writable) return $this.FixtureChildren[$Name] }
+        $key | Add-Member ScriptMethod GetAccessControl {
+            $acl = [pscustomobject]@{}
+            $acl | Add-Member ScriptMethod GetSecurityDescriptorSddlForm { param($Sections) return 'O:BAG:BAD:(A;;KA;;;BA)' }
+            return $acl
+        }
+        $key | Add-Member ScriptMethod Dispose { $this.Disposed = $true }
+        return $key
+    }
+    $childKey = New-RegistryKeyFixture -Values @{ Binary = @{ Kind = 'Binary'; Value = [byte[]] @(0, 128, 255) } } -Children @{}
+    $script:RegistryRootFixture = New-RegistryKeyFixture -Values @{
+        '' = @{ Kind = 'String'; Value = 'default value' }
+        ImagePath = @{ Kind = 'ExpandString'; Value = '%SystemRoot%\fixture.sys' }
+        Start = @{ Kind = 'DWord'; Value = [int] -1 }
+        Large = @{ Kind = 'QWord'; Value = [long]::MaxValue }
+        Multi = @{ Kind = 'MultiString'; Value = [string[]] @('one', 'two') }
+    } -Children @{ Parameters = $childKey }
+    $registryBackup = & {
+        function Get-Item { param($LiteralPath) return $script:RegistryRootFixture }
+        Export-SentinelOneRegistryBackup -Target $registryTarget -BasePath (Join-Path $testRoot 'RegistryBackup') -LogPath (Join-Path $testRoot 'RegistryBackup.log')
+    }
+    Assert-Condition ($registryBackup.Format -eq 'RegistryClixml' -and (Test-Path -LiteralPath $registryBackup.Path)) 'Native export failure must fall back to a verified in-process backup.'
+    $registrySnapshot = Import-Clixml -LiteralPath $registryBackup.Path
+    Assert-Condition ($registrySnapshot.RegistryPath -eq $registryTarget.Path -and $registrySnapshot.Keys.Count -eq 2) 'Snapshot must include the exact root and all subkeys.'
+    $rootValues = $registrySnapshot.Keys | Where-Object RelativePath -eq '' | ForEach-Object Values
+    Assert-Condition (($rootValues | Where-Object Name -eq 'ImagePath').Value -eq '%SystemRoot%\fixture.sys') 'Expandable registry strings must not be expanded in the backup.'
+    Assert-Condition (($rootValues | Where-Object Name -eq 'Start').Value -eq -1 -and ($rootValues | Where-Object Name -eq 'Large').Value -eq [long]::MaxValue) 'DWord and QWord values must preserve their numeric data.'
+    Assert-Condition (@(($rootValues | Where-Object Name -eq 'Multi').Value).Count -eq 2 -and ($rootValues | Where-Object Name -eq '').Value -eq 'default value') 'MultiString and default values must survive serialization.'
+    $binaryValue = ($registrySnapshot.Keys | Where-Object RelativePath -eq 'Parameters').Values[0].Value
+    Assert-Condition ($binaryValue.Count -eq 3 -and $binaryValue[1] -eq 128 -and $registrySnapshot.Keys[0].SecurityDescriptor -like 'O:BA*') 'Binary data and registry security descriptors must survive backup.'
+    Assert-Condition ($script:RegistryRootFixture.Disposed -and $childKey.Disposed) 'Registry handles must be disposed after backup.'
+    $script:RegistryRootFixture.FixtureChildren.Parameters = $null
+    $incompleteSnapshotPath = Join-Path $testRoot 'Incomplete.registry.clixml'
+    Assert-Throws { & {
+        function Get-Item { param($LiteralPath) return $script:RegistryRootFixture }
+        Export-SentinelOneRegistrySnapshot -Target $registryTarget -DestinationPath $incompleteSnapshotPath
+    } } 'An unreadable/missing subkey must fail the backup rather than permitting deletion.'
+    Assert-Condition (-not (Test-Path -LiteralPath $incompleteSnapshotPath)) 'An incomplete registry snapshot must not be published as a usable backup.'
+
     $result = Invoke-SentinelOneManualCleanup -LogDirectory $logDirectory -WhatIf
     Assert-Condition ($result.Outcome -eq 'Skipped' -and -not (Test-Path -LiteralPath $logDirectory)) 'WhatIf must not write logs/backups or delete targets.'
     Assert-Condition (Test-Path -LiteralPath $script:FirstTarget) 'Preview must leave remnants present.'
