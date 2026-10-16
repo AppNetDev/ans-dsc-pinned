@@ -125,6 +125,127 @@ For an existing unhealthy agent, `-Mode Upgrade -TestOnly` tests a signed MSI ta
 `-Mode Upgrade` applies an approved newer package through the vendor installer.
 See [MSI upgrade recovery](dscv3/README.md) for validation and reboot behavior.
 
+### SentinelOne uninstall
+
+Run [Uninstall-SentinelOneAgent.ps1](Uninstall-SentinelOneAgent.ps1) elevated or as
+SYSTEM. It is standalone and can be executed directly from an `iwr` download:
+
+```powershell
+$uri = 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master/Uninstall-SentinelOneAgent.ps1'
+$script = [scriptblock]::Create((iwr -Uri $uri -UseBasicParsing).Content)
+& $script -UninstallPassword $AgentUninstallPassphrase -WhatIf
+& $script -UninstallPassword $AgentUninstallPassphrase
+```
+
+`-UninstallToken`, `-AgentPassphrase`, and `-Passphrase` are aliases for
+`-UninstallPassword`. Supply the **agent uninstall passphrase**, retrieved at
+runtime from your approved secret store; site registration and API tokens do not
+authorize removal. Arguments are passed to the script block as data, so spaces
+and PowerShell metacharacters in the passphrase are preserved. Quotes, line
+breaks, NUL, and a trailing backslash are rejected before native invocation.
+For reviewed automation, pin the download URL to the approved commit SHA.
+
+Local execution:
+
+```powershell
+.\Uninstall-SentinelOneAgent.ps1 -UninstallToken $AgentUninstallPassphrase -Confirm:$false
+```
+
+The target is the local SentinelOne agent. The script resolves `uninstall.exe`
+beside the registered `SentinelAgent` service executable and requires a valid
+SentinelOne/Sentinel Labs signature. If that binary is unavailable, it uses one
+unambiguous registered SentinelOne MSI product code with `UNINSTALL_KEY`. It
+does not execute arbitrary registry uninstall strings. Missing/ambiguous targets
+fail with instructions to repair the agent or obtain its approved installer.
+**Verify before acting:** validate the installed agent version's CLI support and
+perform a pilot removal before fleet rollout. See the distributor's
+[uninstall guidance](https://support.guardz.com/en/articles/11647145-sentinelone-agent-policies-installation)
+for passphrase and MSI requirements.
+
+Removal ends endpoint protection on this host. Coordinate replacement coverage
+and retain an approved installer and enrollment token as the recovery path.
+There is no automatic reinstall or reboot. Exit codes `3010` and `1641` produce
+`Outcome = RestartRequired`; `1641` means the vendor reports a restart initiated
+despite restart suppression. Reboot in the approved window and rerun to verify
+absence. Exit `0` must also pass local service and product-registration checks
+within `-VerificationTimeoutSeconds` (default 60). Remaining registrations make
+the operation fail rather than claim successful removal. Absence means those
+local registrations are gone; it does not verify console decommissioning or
+removal of every driver or residual file.
+
+Results include changed/unchanged/skipped/failed counts, native exit code,
+`RestartRequired`, `RemovalVerified`, and `LogPath`. Already absent is a no-op.
+Errors terminate execution. Timestamped start/end logs are written under
+`C:\ANS\SentinelOne\Logs`; the passphrase and vendor output are excluded.
+The native command line necessarily contains the passphrase and can be captured
+by privileged process auditing; do not put literal secrets in command history or
+transcripts. On timeout, the installer is left running; inspect its state before
+retrying. `-WhatIf` performs detection and target validation without removal or
+log creation. No DSC installation or companion download is needed.
+
+Run `tests\Test-SentinelOneUninstall.ps1` for isolated checks that never execute
+the vendor uninstaller or modify the installed agent.
+
+#### Force uninstall and remnant cleanup (passkey required)
+
+Use the same standalone download with `-ForceCleanup` (`-Force` is an alias):
+
+```powershell
+$uri = 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master/Uninstall-SentinelOneAgent.ps1'
+$script = [scriptblock]::Create((iwr -Uri $uri -UseBasicParsing).Content)
+& $script -ForceCleanup -Passkey $AgentUninstallPassphrase -WhatIf -Verbose
+& $script -ForceCleanup -Passkey $AgentUninstallPassphrase -Confirm:$false
+```
+
+Run in elevated native 64-bit PowerShell on 64-bit Windows. The passkey is
+required even for a force preview, and must be accepted by the vendor uninstall
+operation before any remnant deletion. A failed/timed-out uninstall blocks
+cleanup; `3010`/`1641` defer cleanup for reboot. If registration is already gone,
+the script cannot validate a passkey and stops; use vendor Support for that
+orphaned-agent case. Merely supplying a nonempty parameter does not authorize
+registry deletion.
+
+After vendor exit `0`, stopped services/drivers are required before cleanup.
+The fixed allowlist covers the pasted incomplete-uninstall procedure's
+SentinelAgent/Monitor/HelperService/StaticEngine service keys, named autologgers,
+machine class/IFEO entries, `Sentinel Agent` uninstall key and startup values,
+plus these exact folders on the host's Windows/program-data/program-files drives:
+
+- `%SystemRoot%\System32\drivers\SentinelOne`
+- `%ProgramData%\Sentinel`
+- `%ProgramW6432%\SentinelOne`
+
+`-WhatIf -Verbose` lists the exact scope. Shared startup keys keep their other
+values. `LogProcessorService` is eligible only if its ImagePath points inside a
+`SentinelOne` folder. HKCU is excluded because SYSTEM/RMM's current-user hive is
+not the interactive user's. There is no broad registry search, ownership
+takeover, protection bypass, or forced driver unload. Access-denied and files-in-use
+errors stop the operation. Reparse points in a cleanup directory or its ancestors
+are rejected before recursive operations.
+
+All existing eligible keys are exported with `reg.exe export`, and folders are
+copied **before any remnant deletion**, into an Administrators/SYSTEM-only run
+directory under `C:\ANS\SentinelOne\CleanupBackups`. Vendor logs are preserved
+in those copies. `Manifest.json` maps each backup to its original target; the
+operational log records the backup path and each completed deletion. A backup
+failure blocks deletion; a later deletion failure can leave partial cleanup,
+so inspect the log before retrying. `CleanupChanged`, `CleanupSkipped`,
+`CleanupVerified`, and `BackupPath` describe completed cleanup in successful results.
+
+Plan a reboot after any manual cleanup; the script reports `RestartRequired`
+and never schedules one. Verify local removal after reboot, then reinstall an
+approved agent and confirm console connectivity. The recovery path for endpoint
+protection is the approved installer and enrollment token. Registry exports are
+remnant backups, not a working-agent rollback or a system-state backup. If Support
+requires restoration, use the manifest to restore only the affected keys/values
+and files; a startup-key export contains other values and must not be imported
+wholesale over newer configuration. Registry exports do not preserve registry ACLs.
+See [Microsoft's registry export reference](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/reg-export).
+
+`tests\Test-SentinelOneForceCleanup.ps1` verifies the allowlist, active-component
+blocks, real backup/deletion of temporary fixtures, backup failure, and junction
+rejection. It never deletes live SentinelOne data.
+
 ## Quick Start — Classic DSC
 
 ### Installation
