@@ -42,7 +42,8 @@ param()
     }
     [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 
-    $sourceBaseUri = 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master'
+    # Keep the runner and all companion files on the tested recovery revision.
+    $sourceBaseUri = 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/557788d5b36a5edcfcf1e6fac87e4aa8f0f3b1ee'
     $recoveryParameters = @{
         Mode = 'Upgrade'
         SourceBaseUri = $sourceBaseUri

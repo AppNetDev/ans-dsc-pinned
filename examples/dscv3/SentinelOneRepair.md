@@ -8,7 +8,9 @@ iwr 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master/Repair-Se
 
 This uses the current signed MSI from the default ConnectWise URL and bootstraps
 DSC if needed. It preserves enrollment, returns health/restart/log information,
-and never restarts Windows automatically. A healthy target/newer agent is
+and never restarts Windows automatically. Downloaded runner/companion source is
+pinned to commit `557788d5b36a5edcfcf1e6fac87e4aa8f0f3b1ee`.
+A healthy target/newer agent is
 unchanged; an unhealthy same/newer agent requires provider-assisted recovery.
 No token or passphrase is needed. This entry point does not re-enroll the agent.
 If Windows has a pending servicing or Windows Update restart, it reports

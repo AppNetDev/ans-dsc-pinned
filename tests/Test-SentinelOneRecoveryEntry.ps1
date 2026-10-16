@@ -30,7 +30,7 @@ function Invoke-WebRequest {
     if ($Uri -eq 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master/Repair-SentinelOneAgent.ps1') {
         return $entryText
     }
-    Assert-Condition ($Uri -eq 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master/examples/dscv3/Invoke-DscV3SentinelOneRepair.ps1') 'Entry must fetch the intended runner revision.'
+    Assert-Condition ($Uri -eq 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/557788d5b36a5edcfcf1e6fac87e4aa8f0f3b1ee/examples/dscv3/Invoke-DscV3SentinelOneRepair.ps1') 'Entry must fetch the pinned runner revision.'
     Assert-Condition ($UseBasicParsing -and $TimeoutSec -eq 120) 'Download must be noninteractive and bounded.'
     if ($script:ReturnEmpty) { return [pscustomobject]@{ Content = '' } }
     [pscustomobject]@{ Content = @'
@@ -53,7 +53,7 @@ try {
     $priorProgress = $ProgressPreference
     $result = Invoke-Expression $entryText
     Assert-Condition ($result.Mode -eq 'Upgrade' -and $result.Healthy -and -not $result.Preview) 'No-parameter IEX must apply MSI recovery and return the result.'
-    Assert-Condition ($result.Source -eq 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master') 'Companion source must match the runner revision.'
+    Assert-Condition ($result.Source -eq 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/557788d5b36a5edcfcf1e6fac87e4aa8f0f3b1ee') 'Companion source must match the pinned runner revision.'
     Assert-Condition ($result.Confirmation -eq 'None') 'Unattended recovery must suppress confirmation prompts.'
     Assert-Condition (-not ($result.BoundParameters -contains 'SiteToken') -and -not ($result.BoundParameters -contains 'Reenroll')) 'Recovery must not request enrollment changes.'
     Assert-Condition ($runnerText -eq 'caller-value' -and $ProgressPreference -eq $priorProgress) 'IEX must preserve caller variables and preferences.'
