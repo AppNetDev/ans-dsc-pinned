@@ -6,7 +6,9 @@
     Implements the supplied manual registry/file cleanup procedure independently
     of the vendor uninstaller. No passphrase or successful uninstall is required.
     Backs up each target before deletion. Locked or inaccessible targets are
-    retained and reported; other eligible targets continue. Reboot and rerun for
+    retained and reported; other eligible targets continue. Backed-up locked files
+    are queued for deletion at reboot, followed by directories in child-first order.
+    Reboot and rerun to verify removal, then
     remaining targets, then reinstall using an approved installer and site token.
 .PARAMETER LogDirectory
     Operational log directory. Backups use C:\ANS\SentinelOne\CleanupBackups.
@@ -18,7 +20,8 @@
     Run elevated in native 64-bit PowerShell. Deletes the allowlisted local agent
     service/class/IFEO/autologger keys, named startup values, verified SentinelOne
     MSI registrations, and the three SentinelOne directories. This removes local
-    protection configuration. It does not unload drivers, restart Windows, take
+    protection configuration. Also removes backed-up service/driver registrations
+    whose names and executable paths identify SentinelOne. It does not unload drivers, restart Windows, take
     ownership, or reinstall the agent. Access-denied targets must have their
     permissions corrected as described in the supplied manual procedure.
     Backups preserve remnants and logs, not a functional agent rollback. Use the
@@ -207,6 +210,117 @@ function Test-SentinelOneUninstallAdministrator {
     } finally { $identity.Dispose() }
 }
 
+function Get-SentinelOneRegisteredComponents {
+    [CmdletBinding()]
+    param()
+    $roots = @(
+        (Join-Path $env:SystemRoot 'System32\drivers\SentinelOne'),
+        (Join-Path $env:ProgramData 'Sentinel'),
+        (Join-Path $env:ProgramW6432 'SentinelOne')
+    )
+    foreach ($class in @('Win32_Service', 'Win32_SystemDriver')) {
+        foreach ($component in @(Get-CimInstance -ClassName $class)) {
+            if ($component.Name -notmatch '^(?:Sentinel[A-Za-z0-9_-]*|LogProcessorService)$') { continue }
+            $componentPath = [Environment]::ExpandEnvironmentVariables([string] $component.PathName).TrimStart('"')
+            if ($componentPath.StartsWith('\SystemRoot\', [StringComparison]::OrdinalIgnoreCase)) {
+                $componentPath = $env:SystemRoot + $componentPath.Substring(11)
+            }
+            if ($componentPath.StartsWith('\??\') -or $componentPath.StartsWith('\\?\')) { $componentPath = $componentPath.Substring(4) }
+            foreach ($root in $roots) {
+                if ($componentPath.StartsWith($root.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) {
+                    $keyPath = 'HKLM\SYSTEM\CurrentControlSet\Services\' + $component.Name
+                    if (Test-Path -LiteralPath ('Registry::HKEY_LOCAL_MACHINE\' + $keyPath.Substring(5))) {
+                        [pscustomobject]@{ Name = $component.Name; RegistryPath = $keyPath; Root = $root; State = $component.State }
+                    }
+                    break
+                }
+            }
+        }
+    }
+}
+
+function Get-SentinelOneQueuedDeletionPaths {
+    [CmdletBinding()]
+    param()
+    $paths = [Collections.Generic.HashSet[string]]::new([StringComparer]::OrdinalIgnoreCase)
+    $key = Get-Item -LiteralPath 'Registry::HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager'
+    try { $operations = @($key.GetValue('PendingFileRenameOperations', @())) }
+    finally { $key.Dispose() }
+    for ($index = 0; $index + 1 -lt $operations.Count; $index += 2) {
+        if ([string]::IsNullOrEmpty($operations[$index + 1])) {
+            $path = [string] $operations[$index]
+            if ($path.StartsWith('\??\') -or $path.StartsWith('\\?\')) { $path = $path.Substring(4) }
+            $null = $paths.Add($path)
+        }
+    }
+    return ,$paths
+}
+
+function Add-SentinelOneRebootDeletion {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string] $Path)
+    if (-not ('ANS.SentinelOneCleanup.NativeMethods' -as [type])) {
+        Add-Type -TypeDefinition @'
+using System;
+using System.Runtime.InteropServices;
+namespace ANS.SentinelOneCleanup {
+    public static class NativeMethods {
+        [DllImport("kernel32.dll", EntryPoint = "MoveFileExW", CharSet = CharSet.Unicode, SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool MoveFileEx(string existingPath, string newPath, uint flags);
+    }
+}
+'@
+    }
+    if (-not [ANS.SentinelOneCleanup.NativeMethods]::MoveFileEx($Path, $null, 4)) {
+        $errorCode = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
+        throw (New-Object ComponentModel.Win32Exception($errorCode))
+    }
+}
+
+function Register-SentinelOneDirectoryRebootDeletion {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string] $Path,
+        [Parameter(Mandatory)][string] $BackupPath,
+        [Parameter(Mandatory)][string] $LogPath
+    )
+    # Validate the absolute allowlisted root and reject links before enumeration.
+    Assert-SentinelOneCleanupDirectory -Path $Path
+    if (-not (Test-Path -LiteralPath $BackupPath -PathType Container)) { throw 'A completed directory backup is required before queuing deletion.' }
+    $root = [IO.Path]::GetFullPath($Path).TrimEnd('\')
+    $children = @(Get-ChildItem -LiteralPath $root -Recurse -Force)
+    $files = @($children | Where-Object { -not $_.PSIsContainer })
+    $directories = @($children | Where-Object PSIsContainer | Sort-Object { $_.FullName.Length } -Descending)
+    $paths = @($files | ForEach-Object FullName) + @($directories | ForEach-Object FullName) + @($root)
+    # Validate the complete plan before queuing anything. New/unbacked-up files
+    # and links must not become persistent deletion requests.
+    foreach ($itemPath in $paths) {
+        $fullPath = [IO.Path]::GetFullPath($itemPath)
+        if ($fullPath -ne $root -and -not $fullPath.StartsWith($root + '\', [StringComparison]::OrdinalIgnoreCase)) {
+            throw 'Refusing to queue deletion outside the validated directory.'
+        }
+        $relativePath = $fullPath.Substring($root.Length).TrimStart('\')
+        $backupItem = if ($relativePath) { Join-Path $BackupPath $relativePath } else { $BackupPath }
+        if (-not (Test-Path -LiteralPath $backupItem)) { throw 'A remaining item has no completed backup; no deletion was queued for this directory.' }
+    }
+    $queued = Get-SentinelOneQueuedDeletionPaths
+    foreach ($itemPath in $paths) {
+        $status = 'AlreadyScheduled'
+        $errorMessage = ''
+        try {
+            if (-not $queued.Contains($itemPath)) {
+                Add-SentinelOneRebootDeletion -Path $itemPath
+                $null = $queued.Add($itemPath)
+                $status = 'Scheduled'
+            }
+        }
+        catch { $status = 'Failed'; $errorMessage = $_.Exception.Message }
+        Add-Content -LiteralPath $LogPath -Encoding UTF8 -Value ("RebootDeletion=$status; path=$itemPath; error=$errorMessage")
+        [pscustomobject]@{ Path = $itemPath; Status = $status; Error = $errorMessage }
+    }
+}
+
 function Invoke-SentinelOneManualCleanup {
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
     param([Parameter(Mandatory)][string] $LogDirectory)
@@ -225,6 +339,10 @@ function Invoke-SentinelOneManualCleanup {
         Failed = 0
         RestartRequired = $false
         CleanupVerified = $false
+        ScheduledForDeletion = 0
+        AlreadyScheduled = 0
+        ScheduledTargets = @()
+        RemainingComponents = @()
         BackupPath = $null
         LogPath = $null
         RemainingTargets = @()
@@ -234,6 +352,17 @@ function Invoke-SentinelOneManualCleanup {
         try { $locked = $mutex.WaitOne(0) } catch [Threading.AbandonedMutexException] { $locked = $true }
         if (-not $locked) { throw 'Another SentinelOne recovery, installation, or removal operation is running.' }
         $targets = @(Get-SentinelOneCleanupTargets)
+        # The manual list does not cover every driver name (e.g. network monitor
+        # and ELAM). Include only product-owned registrations confirmed by CIM
+        # name AND a path inside one of the three exact cleanup directories.
+        foreach ($component in @(Get-SentinelOneRegisteredComponents)) {
+            foreach ($controlSet in @('CurrentControlSet', 'ControlSet001', 'Setup\FirstBoot')) {
+                $keyPath = "HKLM\SYSTEM\$controlSet\Services\$($component.Name)"
+                if ($keyPath -notin @($targets | ForEach-Object Path)) {
+                    $targets += [pscustomobject]@{ Kind = 'Key'; Path = $keyPath; Name = $null }
+                }
+            }
+        }
         foreach ($target in $targets) { Write-Verbose ("Cleanup target: {0}; value={1}" -f $target.Path, $target.Name) }
         if (-not $PSCmdlet.ShouldProcess($env:COMPUTERNAME, 'Back up and remove listed SentinelOne remnants without invoking the vendor uninstaller; reboot and reinstall required')) {
             $result.Outcome = 'Skipped'
@@ -302,6 +431,42 @@ function Invoke-SentinelOneManualCleanup {
                 Add-Content -LiteralPath $logPath -Encoding UTF8 -Value ("RemovalBlocked=$($target.Path); error=$($_.Exception.Message)")
             }
         }
+        # Process delayed deletion only after all backed-up registrations have
+        # been removed. Do not queue files for a still-registered component.
+        $result.RemainingComponents = @(Get-SentinelOneRegisteredComponents)
+        $scheduledRoots = @()
+        foreach ($entry in @($manifest | Where-Object Kind -eq 'Directory')) {
+            try {
+                if (-not (Test-Path -LiteralPath $entry.Path)) { continue }
+                if (@($result.RemainingComponents | Where-Object { $_.Root -eq $entry.Path }).Count) {
+                    throw 'A product-owned service/driver registration still references this directory; resolve its registry cleanup before scheduling files.'
+                }
+                $queueResults = @(Register-SentinelOneDirectoryRebootDeletion -Path $entry.Path -BackupPath $entry.BackupPath -LogPath $logPath)
+                $accepted = @($queueResults | Where-Object Status -ne 'Failed')
+                $result.ScheduledForDeletion += @($queueResults | Where-Object Status -eq 'Scheduled').Count
+                $result.AlreadyScheduled += @($queueResults | Where-Object Status -eq 'AlreadyScheduled').Count
+                $result.ScheduledTargets += $accepted
+                if (@($queueResults | Where-Object Status -eq 'Failed').Count -eq 0) { $scheduledRoots += $entry.Path }
+            }
+            catch { Add-Content -LiteralPath $logPath -Encoding UTF8 -Value ("RebootDeletionBlocked=$($entry.Path); error=$($_.Exception.Message)") }
+        }
+        # Pending requests still matter when the files were removed on a later
+        # run: reinstalling before reboot could recreate paths in the queue.
+        $pendingPaths = Get-SentinelOneQueuedDeletionPaths
+        $directoryRoots = @($targets | Where-Object Kind -eq 'Directory' | ForEach-Object Path)
+        foreach ($pendingPath in $pendingPaths) {
+            foreach ($directoryRoot in $directoryRoots) {
+                if ($pendingPath -eq $directoryRoot -or $pendingPath.StartsWith($directoryRoot.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) {
+                    if ($pendingPath -notin @($result.ScheduledTargets | ForEach-Object Path)) {
+                        $result.ScheduledTargets += [pscustomobject]@{ Path = $pendingPath; Status = 'AlreadyScheduled'; Error = '' }
+                        $result.AlreadyScheduled++
+                    }
+                    break
+                }
+            }
+        }
+        ConvertTo-Json -InputObject @($result.ScheduledTargets) -Depth 4 |
+            Set-Content -LiteralPath (Join-Path $result.BackupPath 'RebootDeletions.json') -Encoding UTF8
         $remaining = @()
         foreach ($target in $targets) {
             try {
@@ -310,12 +475,19 @@ function Invoke-SentinelOneManualCleanup {
             catch { $remaining += $target }
         }
         $result.RemainingTargets = @($remaining | Select-Object Kind, Path, Name)
-        $result.CleanupVerified = $remaining.Count -eq 0
-        if ($remaining.Count) {
-            $result.Failed = $remaining.Count
+        $result.CleanupVerified = $remaining.Count -eq 0 -and $result.ScheduledTargets.Count -eq 0 -and $result.RemainingComponents.Count -eq 0
+        $unscheduled = @($remaining | Where-Object { $_.Kind -ne 'Directory' -or $_.Path -notin $scheduledRoots })
+        if ($unscheduled.Count -or $result.RemainingComponents.Count) {
+            $result.Failed = [Math]::Max($unscheduled.Count, $result.RemainingComponents.Count)
             $result.Outcome = 'CleanupIncomplete'
             $result.RestartRequired = $true
-            $result.Message = 'Some remnants remain. Review the log, reboot, and rerun. For access denied, apply the ownership/permissions steps to the listed keys. Reinstall only after cleanup completes.'
+            $result.Message = 'Some remnants could not be removed or fully scheduled. Review the log and RemainingComponents. Resolve remaining service/driver registrations before reboot; for access denied, apply the supplied permissions steps. Do not reinstall until cleanup is verified.'
+            Write-Warning $result.Message
+        }
+        elseif ($remaining.Count -or $result.ScheduledTargets.Count) {
+            $result.Outcome = 'RebootDeletionScheduled'
+            $result.RestartRequired = $true
+            $result.Message = 'Remaining backed-up files/directories are scheduled for deletion at reboot. Reboot, then rerun cleanup to verify removal before reinstalling. Scheduled does not mean deleted.'
             Write-Warning $result.Message
         }
         elseif ($result.RestartRequired) {
@@ -337,8 +509,8 @@ function Invoke-SentinelOneManualCleanup {
         try {
             if ($logPath) {
                 Add-Content -LiteralPath $logPath -Encoding UTF8 -Value (
-                    '{0:o} End; outcome={1}; changed={2}; unchanged={3}; skipped={4}; failed={5}; restartRequired={6}' -f
-                    (Get-Date), $result.Outcome, $result.Changed, $result.Unchanged, $result.Skipped, $result.Failed, $result.RestartRequired)
+                    '{0:o} End; outcome={1}; changed={2}; unchanged={3}; skipped={4}; failed={5}; restartRequired={6}; scheduled={7}; alreadyScheduled={8}' -f
+                    (Get-Date), $result.Outcome, $result.Changed, $result.Unchanged, $result.Skipped, $result.Failed, $result.RestartRequired, $result.ScheduledForDeletion, $result.AlreadyScheduled)
             }
         }
         finally {

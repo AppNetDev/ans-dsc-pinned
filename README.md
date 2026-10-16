@@ -206,8 +206,28 @@ and SYSTEM under `C:\ANS\SentinelOne\CleanupBackups`; operational logs are under
 `C:\ANS\SentinelOne\Logs`.
 
 Locked/inaccessible targets are retained where backup cannot complete; failed
-deletions may be partial. Other eligible targets continue. `CleanupIncomplete`
-and `RemainingTargets` identify unfinished work. Follow the original ownership
+deletions may be partial. Backed-up files that resist immediate deletion are
+queued using `MoveFileExW(MOVEFILE_DELAY_UNTIL_REBOOT)`, with files before
+directories and directories deepest first. Existing deletion requests are reused;
+unrelated rename/deletion requests are preserved. Queuing does not prove deletion.
+`ScheduledForDeletion`, `AlreadyScheduled`, and `ScheduledTargets` report accepted
+requests; `RebootDeletions.json` in the backup directory and the operational log
+record them. `Outcome: RebootDeletionScheduled` requires a reboot and a verification
+rerun before reinstalling, even if the queued paths have since disappeared.
+To cancel before reboot, use that receipt to remove only the matching deletion
+pairs from Session Manager's `PendingFileRenameOperations`; never clear the whole
+value or overwrite unrelated pending operations. Retain the remnant backups for
+selective restoration if needed.
+
+The script also backs up/removes service and driver registration keys whose
+SentinelOne-specific names and executable paths positively identify the product
+inside one of the three cleanup directories. This includes registrations omitted
+from the manual list, such as network monitor and ELAM. `RemainingComponents`
+reports registrations still present; their directory is not queued until those
+registrations are removed. No driver is forcibly unloaded.
+
+Other eligible targets continue. `CleanupIncomplete` and `RemainingTargets`
+identify unfinished work that could not be removed or fully queued. Follow the original ownership
 and Full Control steps only for the affected registry keys; this script does not
 change ownership or forcibly unload drivers. The supplied HKCU toast-value step
 applies only to the caller's user hive; SYSTEM/service contexts skip that value.
