@@ -36,6 +36,7 @@
       "properties": {
         "PackagePath": {"type": "string", "minLength": 1},
         "PackageVersion": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+(?:\\.\\d+)?$"},
+        "PackageAgentVersion": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+\\.\\d+$"},
         "PackageSha256": {"type": "string", "pattern": "^[a-fA-F0-9]{64}$"},
         "LogDirectory": {"type": "string", "minLength": 1},
         "ReceiptPath": {"type": "string", "minLength": 1},

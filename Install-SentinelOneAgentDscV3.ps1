@@ -113,6 +113,7 @@ function Initialize-SentinelOneMsiRun {
     $Properties = [ordered]@{
         PackagePath = $Package.Path
         PackageVersion = $Package.Version
+        PackageAgentVersion = $Package.AgentVersion
         PackageSha256 = $Package.Sha256
         LogDirectory = Join-Path $RunRoot 'Logs'
         ReceiptPath = Join-Path $StateDirectory ('Reboot-{0}.json' -f $Package.Sha256)
@@ -189,8 +190,9 @@ try {
         InstallerExitCode = $State.InstallerExitCode
         InstalledVersion = $State.InstalledVersion
         PackageVersion = $Run.PackageVersion
+        PackageAgentVersion = $State.PackageAgentVersion
         PackageSha256 = $Run.PackageSha256
-        UpgradeAvailable = [bool] ($State.InstalledVersion -and ([version] $State.InstalledVersion -lt [version] $Run.PackageVersion))
+        UpgradeAvailable = [bool] ($State.InstalledVersion -and ([version] $State.InstalledVersion -lt [version] $State.PackageAgentVersion))
         ServiceState = $State.ServiceState
         StartMode = $State.StartMode
         AgentLoaded = [bool] $State.AgentLoaded

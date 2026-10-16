@@ -76,7 +76,12 @@ Use the wrapper to generate a valid configuration from the actual MSI.
 
 - Verifies a valid SentinelOne/Sentinel Labs Authenticode signature, product
   metadata, and hash before installation. Unfamiliar signer subjects fail closed.
-- Healthy means the agent version is at least the selected MSI version, the
+- Reads the target `SentinelAgent.exe` file version from the signed MSI's File
+  table. `PackageVersion` remains MSI ProductVersion; `PackageAgentVersion` is
+  the executable target. For example, MSI `26.1.177` can contain agent
+  `26.1.2.177`; those layouts must not be compared directly. Missing, ambiguous,
+  or nonnumeric target file versions are rejected before installation.
+- Healthy means the installed executable file version is at least the target executable version, the
   service is Automatic and Running, SentinelCtl reports the agent loaded, and
   self-protection is On. Portal enrollment is always `NotVerified`.
 - A healthy agent at the target version or newer is unchanged. An unhealthy agent

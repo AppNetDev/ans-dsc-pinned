@@ -49,8 +49,10 @@ try {
         foreach ($sql in @(
             'CREATE TABLE `Property` (`Property` CHAR(72) NOT NULL, `Value` CHAR(0) LOCALIZABLE PRIMARY KEY `Property`)',
             "INSERT INTO ``Property`` (``Property``, ``Value``) VALUES ('ProductName', 'Sentinel Agent fixture')",
-            "INSERT INTO ``Property`` (``Property``, ``Value``) VALUES ('ProductVersion', '25.3.1.100')",
-            "INSERT INTO ``Property`` (``Property``, ``Value``) VALUES ('Manufacturer', 'Sentinel Labs, Inc.')"
+            "INSERT INTO ``Property`` (``Property``, ``Value``) VALUES ('ProductVersion', '26.1.177')",
+            "INSERT INTO ``Property`` (``Property``, ``Value``) VALUES ('Manufacturer', 'Sentinel Labs, Inc.')",
+            'CREATE TABLE `File` (`File` CHAR(72) NOT NULL, `FileName` CHAR(255), `Version` CHAR(72) PRIMARY KEY `File`)',
+            "INSERT INTO ``File`` (``File``, ``FileName``, ``Version``) VALUES ('Agent', 'SENTIN~1.EXE|SentinelAgent.exe', '26.1.2.177')"
         )) {
             $view = $null
             try {
@@ -78,7 +80,7 @@ try {
     try {
         $metadataItems = @(Get-SentinelOneMsiPackage -Path $metadataPath)
         Assert-Condition ($metadataItems.Count -eq 1) 'COM metadata reader must emit exactly one package object, without null method results.'
-        Assert-Condition ($metadataItems[0].Path -eq $metadataPath -and $metadataItems[0].Version -eq '25.3.1.100') 'Real COM metadata must provide Path and Version to the wrapper.'
+        Assert-Condition ($metadataItems[0].Path -eq $metadataPath -and $metadataItems[0].Version -eq '26.1.177' -and $metadataItems[0].AgentVersion -eq '26.1.2.177') 'Real COM metadata must preserve separate MSI and executable versions.'
     }
     finally { Remove-Item -LiteralPath Function:\Get-AuthenticodeSignature }
     # Exercise the real timeout implementation while intercepting process creation.
@@ -123,7 +125,7 @@ function Get-SentinelOneMsiPackage {
     $fixture = Read-Fixture
     $hash = (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash
     if ($ExpectedSha256 -and $ExpectedSha256 -ne $hash) { throw 'MSI SHA256 does not match the expected hash.' }
-    [pscustomobject]@{ Path = $Path; Version = $fixture.PackageVersion; Sha256 = $hash; ProductName = 'Sentinel Agent fixture' }
+    [pscustomobject]@{ Path = $Path; Version = $fixture.PackageVersion; AgentVersion = $fixture.PackageAgentVersion; Sha256 = $hash; ProductName = 'Sentinel Agent fixture' }
 }
 function Test-SentinelOneAdministrator { return $true }
 function Get-CimInstance {
@@ -140,7 +142,7 @@ function Get-Item {
     param([string] $LiteralPath)
     $fixture = Read-Fixture
     if ($LiteralPath -eq $fixture.AgentPath) {
-        return [pscustomobject]@{ VersionInfo = [pscustomobject]@{ ProductVersion = $fixture.InstalledVersion } }
+        return [pscustomobject]@{ VersionInfo = [pscustomobject]@{ FileVersion = $fixture.InstalledVersion } }
     }
     Microsoft.PowerShell.Management\Get-Item -LiteralPath $LiteralPath
 }
@@ -161,7 +163,7 @@ function Invoke-SentinelOneMsiInstall {
     $fixture = Read-Fixture
     Add-Content -LiteralPath $fixture.InvocationsPath -Value 'Simulated MSI'
     if ($fixture.ExitCode -in @(0, 3010)) {
-        $fixture.InstalledVersion = $fixture.PackageVersion
+        $fixture.InstalledVersion = $fixture.PackageAgentVersion
         $fixture.ServiceState = 'Running'
         $fixture.StartMode = 'Auto'
         $fixture.AgentLoaded = $fixture.PostUpgradeHealthy
@@ -174,7 +176,7 @@ function Invoke-SentinelOneMsiInstall {
     $overrides = $overrides.Replace('__FIXTURE_PATH__', $fixturePath.Replace("'", "''"))
     Add-Content -LiteralPath (Join-Path $resourceRoot 'SentinelOne.Msi.Functions.ps1') -Value $overrides
     $fixture = [ordered]@{
-        PackageVersion = '25.3.1.100'; InstalledVersion = '25.2.6.442'
+        PackageVersion = '26.1.177'; PackageAgentVersion = '26.1.2.177'; InstalledVersion = '25.1.4.434'
         ServiceState = 'Start Pending'; StartMode = 'Auto'; AgentLoaded = $false
         SelfProtection = 'Off'; StatusExitCode = 0; ExitCode = 0; PostUpgradeHealthy = $true
         PendingReboot = $false; BootTime = '2026-01-01T00:00:00Z'
@@ -206,16 +208,30 @@ function Invoke-SentinelOneMsiInstall {
 
     $result = & $wrapper @parameters
     Assert-Condition ($result.Healthy -and $result.AgentLoaded -and $result.SelfProtection -eq 'On') 'Successful upgrade must satisfy all health checks.'
-    Assert-Condition ($result.InstalledVersion -eq $fixture.PackageVersion -and (Get-InvocationCount) -eq 1) 'Upgrade must run once and reach the target version.'
+    Assert-Condition ($result.InstalledVersion -eq $fixture.PackageAgentVersion -and $result.PackageVersion -eq '26.1.177' -and -not $result.UpgradeAvailable -and (Get-InvocationCount) -eq 1) 'Upgrade must reach executable 26.1.2.177 without confusing MSI 26.1.177 with the executable version.'
     $result = & $wrapper @parameters
     Assert-Condition ($result.Healthy -and (Get-InvocationCount) -eq 1) 'Healthy target must converge without a second MSI invocation.'
 
-    $fixture.InstalledVersion = $fixture.PackageVersion
+    # Old staged configurations must resolve the executable target from the MSI.
+    $legacyConfig = Get-Content -LiteralPath $result.ConfigurationPath -Raw | ConvertFrom-Json
+    $legacyConfig.resources[0].properties.PSObject.Properties.Remove('PackageAgentVersion')
+    $legacyJson = $legacyConfig.resources[0].properties | ConvertTo-Json -Depth 8 -Compress
+    $legacyState = $legacyJson |
+        & "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe" -NoProfile -NonInteractive -ExecutionPolicy Bypass -File (Join-Path $resourceRoot 'SentinelOne.Msi.ps1') -Operation Get |
+        ConvertFrom-Json
+    Assert-Condition ($LASTEXITCODE -eq 0 -and $legacyState.Healthy -and $legacyState.PackageAgentVersion -eq '26.1.2.177') 'Legacy configurations must derive the target from the signed MSI instead of comparing mixed version layouts.'
+
+    $fixture.InstalledVersion = '26.1.1.100'
+    Save-Fixture
+    $result = & $wrapper @parameters -Operation Test
+    Assert-Condition (-not $result.Healthy -and $result.UpgradeAvailable -and (Get-InvocationCount) -eq 1) 'An older executable within release 26.1 must still require an upgrade.'
+
+    $fixture.InstalledVersion = $fixture.PackageAgentVersion
     $fixture.AgentLoaded = $false
     Save-Fixture
     Assert-Rejected { & $wrapper @parameters } 'DSC set failed'
     Assert-Condition ((Get-InvocationCount) -eq 1) 'Unhealthy same-version agent must not trigger a forced reinstall.'
-    $fixture.InstalledVersion = '26.1.1.100'
+    $fixture.InstalledVersion = '26.1.3.200'
     Save-Fixture
     Assert-Rejected { & $wrapper @parameters } 'DSC set failed'
     Assert-Condition ((Get-InvocationCount) -eq 1) 'Unhealthy newer agent must not be downgraded.'
@@ -249,7 +265,7 @@ function Invoke-SentinelOneMsiInstall {
     $result = & $wrapper @parameters
     Assert-Condition ($result.RestartRequired -and (Get-InvocationCount) -eq 4) 'Boot-scoped receipt must block another MSI attempt before restart.'
     $fixture.BootTime = '2026-01-02T00:00:00Z'
-    $fixture.InstalledVersion = $fixture.PackageVersion
+    $fixture.InstalledVersion = $fixture.PackageAgentVersion
     $fixture.ServiceState = 'Running'
     $fixture.AgentLoaded = $true
     $fixture.SelfProtection = 'On'

@@ -1,5 +1,18 @@
 # SentinelOne repair / re-enrollment (DSC v3)
 
+For no-parameter MSI recovery, run this in elevated 64-bit PowerShell or as SYSTEM:
+
+```powershell
+iwr 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master/Repair-SentinelOneAgent.ps1' -UseBasicParsing | iex
+```
+
+This uses the current signed MSI from the default ConnectWise URL and bootstraps
+DSC if needed. It preserves enrollment, returns health/restart/log information,
+and never restarts Windows automatically. A healthy target/newer agent is
+unchanged; an unhealthy same/newer agent requires provider-assisted recovery.
+No token or passphrase is needed. This entry point does not re-enroll the agent.
+For a version/hash-pinned package, use the parameterized runner below.
+
 For an existing unhealthy agent or denied service-configuration access, use the
 MSI upgrade mode. It delegates recovery to the vendor MSI without directly changing
 service startup or service ACLs. It requires an approved package newer than the

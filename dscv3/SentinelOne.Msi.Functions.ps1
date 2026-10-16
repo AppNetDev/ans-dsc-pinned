@@ -53,6 +53,35 @@ function Get-SentinelOneMsiPackage {
                 }
             }
         }
+        # MSI ProductVersion and agent file versions use different layouts.
+        # Read the actual target executable version instead of guessing a mapping.
+        $View = $null
+        $Record = $null
+        $AgentVersions = @()
+        try {
+            $View = $Database.OpenView('SELECT `FileName`, `Version` FROM `File`')
+            $null = $View.Execute()
+            while ($null -ne ($Record = $View.Fetch())) {
+                try {
+                    if (($Record.StringData(1).Split('|')[-1]) -ieq 'SentinelAgent.exe') {
+                        $AgentVersions += $Record.StringData(2)
+                    }
+                }
+                finally {
+                    $null = [Runtime.InteropServices.Marshal]::FinalReleaseComObject($Record)
+                    $Record = $null
+                }
+            }
+        }
+        finally {
+            if ($null -ne $View) {
+                $null = $View.Close()
+                $null = [Runtime.InteropServices.Marshal]::FinalReleaseComObject($View)
+            }
+        }
+        if ($AgentVersions.Count -ne 1 -or $AgentVersions[0] -notmatch '^\d+\.\d+\.\d+\.\d+$') {
+            throw 'MSI must identify exactly one SentinelAgent.exe with a numeric file version.'
+        }
     }
     finally {
         if ($null -ne $Database) { $null = [Runtime.InteropServices.Marshal]::FinalReleaseComObject($Database) }
@@ -65,6 +94,7 @@ function Get-SentinelOneMsiPackage {
     [pscustomobject]@{
         Path = $Package.FullName
         Version = ([version] $Metadata.ProductVersion).ToString()
+        AgentVersion = ([version] $AgentVersions[0]).ToString()
         Sha256 = $Hash
         ProductName = $Metadata.ProductName
     }
@@ -107,6 +137,14 @@ function Get-SentinelOneMsiState {
         if ($Key -eq 'MsiTimeoutSeconds' -and -not $Properties.Contains($Key)) { continue }
         $State[$Key] = $Properties[$Key]
     }
+    # Older staged configurations lack the executable version. Recover it from
+    # their signed, hash-checked package; never compare across version layouts.
+    $State.PackageAgentVersion = if ($Properties.Contains('PackageAgentVersion')) {
+        $Properties.PackageAgentVersion
+    }
+    else {
+        (Get-SentinelOneMsiPackage -Path $Properties.PackagePath -ExpectedSha256 $Properties.PackageSha256).AgentVersion
+    }
     $State.Healthy = $false
     $State.InstalledVersion = ''
     $State.ServiceState = 'Missing'
@@ -139,9 +177,9 @@ function Get-SentinelOneMsiState {
     }
     $AgentExecutable = $Matches.Executable
     if (-not (Test-Path -LiteralPath $AgentExecutable -PathType Leaf)) { return $State }
-    # Prefer product version; MSI ProductVersion is compared as a four-part version.
+    # Compare file versions on both sides; MSI ProductVersion is display metadata.
     $VersionInfo = (Get-Item -LiteralPath $AgentExecutable).VersionInfo
-    if ($VersionInfo.ProductVersion -match '^\d+\.\d+\.\d+(?:\.\d+)?') {
+    if ($VersionInfo.FileVersion -match '^\d+\.\d+\.\d+\.\d+') {
         $State.InstalledVersion = $Matches[0]
     }
     $CtlPath = Join-Path (Split-Path -Path $AgentExecutable -Parent) 'SentinelCtl.exe'
@@ -161,7 +199,7 @@ function Get-SentinelOneMsiState {
         $State.Healthy = $State.ServiceState -eq 'Running' -and
             $State.StartMode -eq 'Auto' -and $State.AgentLoaded -and
             $State.SelfProtection -eq 'On' -and
-            ([version] $State.InstalledVersion -ge [version] $Properties.PackageVersion)
+            ([version] $State.InstalledVersion -ge [version] $State.PackageAgentVersion)
     }
     if ($State.Healthy) { $State.Outcome = 'HealthyPortalVerificationRequired' }
     if ($State.RestartRequired) { $State.Outcome = 'RebootRequired' }
@@ -229,7 +267,7 @@ function Invoke-SentinelOneMsiUpgrade {
     if ($State.ServiceState -eq 'Missing' -or -not $State.InstalledVersion) {
         throw 'Existing agent/version could not be identified. This resource upgrades existing agents only.'
     }
-    if ([version] $State.InstalledVersion -ge [version] $Properties.PackageVersion) {
+    if ([version] $State.InstalledVersion -ge [version] $State.PackageAgentVersion) {
         throw 'Agent is unhealthy at the same or a newer version. Supply an approved newer MSI; this resource does not force reinstall or downgrade.'
     }
     if ((Test-Path -LiteralPath 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Component Based Servicing\RebootPending') -or
@@ -239,6 +277,9 @@ function Invoke-SentinelOneMsiUpgrade {
     $Package = Get-SentinelOneMsiPackage -Path $Properties.PackagePath -ExpectedSha256 $Properties.PackageSha256
     if ([version] $Package.Version -ne [version] $Properties.PackageVersion) {
         throw 'MSI version differs from the DSC configuration.'
+    }
+    if ([version] $Package.AgentVersion -ne [version] $State.PackageAgentVersion) {
+        throw 'MSI agent file version differs from the DSC configuration.'
     }
     if (-not $PSCmdlet.ShouldProcess($env:COMPUTERNAME, "Upgrade SentinelOne to $($Package.Version) using the approved MSI")) {
         return $State
