@@ -186,6 +186,40 @@ log creation. No DSC installation or companion download is needed.
 Run `tests\Test-SentinelOneUninstall.ps1` for isolated checks that never execute
 the vendor uninstaller or modify the installed agent.
 
+#### Manual cleanup after incomplete uninstall (no passphrase)
+
+The supplied incomplete-uninstall procedure is implemented separately in
+[`Clear-SentinelOneAgentRemnants.ps1`](Clear-SentinelOneAgentRemnants.ps1).
+It does not invoke the vendor uninstaller and does not require a passphrase:
+
+```powershell
+iwr 'https://raw.githubusercontent.com/AppNetDev/ans-dsc-pinned/master/Clear-SentinelOneAgentRemnants.ps1' -UseBasicParsing | iex
+```
+
+Run elevated in native 64-bit PowerShell. For a preview, download the script and
+invoke it with `-WhatIf -Verbose`. This is destructive cleanup of the local agent
+remnants, including the listed service/class/IFEO/autologger keys, named startup
+values, verified SentinelOne GUID uninstall registrations, and the three listed
+directories. Each target must be backed up before it can be deleted; folder
+backups preserve vendor logs. Backups/manifests are restricted to Administrators
+and SYSTEM under `C:\ANS\SentinelOne\CleanupBackups`; operational logs are under
+`C:\ANS\SentinelOne\Logs`.
+
+Locked/inaccessible targets are retained where backup cannot complete; failed
+deletions may be partial. Other eligible targets continue. `CleanupIncomplete`
+and `RemainingTargets` identify unfinished work. Follow the original ownership
+and Full Control steps only for the affected registry keys; this script does not
+change ownership or forcibly unload drivers. The supplied HKCU toast-value step
+applies only to the caller's user hive; SYSTEM/service contexts skip that value.
+Shared startup keys retain all unrelated values.
+
+Reboot after cleanup, retry any remaining targets, then reinstall the approved
+agent using the site token and confirm protection and destination-console check-in.
+The MSI upgrade-only recovery command cannot install a fully removed agent.
+Backups are remnants/logs, not a working-agent rollback; use the manifest for
+selective restoration and never restore whole shared startup keys over newer data.
+`tests\Test-SentinelOneManualCleanup.ps1` uses temporary fixtures only.
+
 #### Force uninstall and remnant cleanup (passkey required)
 
 Use the same standalone download with `-ForceCleanup` (`-Force` is an alias):
