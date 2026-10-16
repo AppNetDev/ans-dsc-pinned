@@ -62,8 +62,23 @@ $discovered = @(& {
 Assert-Condition ($discovered.Count -eq 1 -and $discovered[0].Name -eq 'SentinelNetworkMonitor') 'Driver discovery must recognize native SystemRoot paths and exclude unrelated paths.'
 # Compile the native declaration, but never call MoveFileEx in fixture tests.
 $nativeCommand = $ast.Find({ param($node) $node -is [Management.Automation.Language.CommandAst] -and $node.GetCommandName() -eq 'Add-Type' }, $true)
-Add-Type -TypeDefinition $nativeCommand.CommandElements[2].Value
-Assert-Condition ($null -ne ('ANS.SentinelOneCleanup.NativeMethods' -as [type])) 'Native MoveFileEx declaration must compile in Windows PowerShell.'
+Add-Type -TypeDefinition ($nativeCommand.CommandElements[2].Value.Replace('namespace ANS.SentinelOneCleanup {', 'namespace ANS.SentinelOneCleanup.SignatureProbe {'))
+Assert-Condition ($null -ne ('ANS.SentinelOneCleanup.SignatureProbe.NativeMethods' -as [type])) 'Native MoveFileEx declaration must compile in Windows PowerShell.'
+# Exercise the production PowerShell-to-.NET call without touching the real
+# reboot queue. A managed method with the native signature rejects empty strings.
+Add-Type -TypeDefinition @'
+namespace ANS.SentinelOneCleanup {
+    public static class NativeMethods {
+        public static string LastPath;
+        public static bool MoveFileEx(string existingPath, string newPath, uint flags) {
+            LastPath = existingPath;
+            return newPath == null && flags == 4;
+        }
+    }
+}
+'@
+Add-SentinelOneRebootDeletion -Path 'C:\Fixture\NoRealDeletion.log'
+Assert-Condition ([ANS.SentinelOneCleanup.NativeMethods]::LastPath -eq 'C:\Fixture\NoRealDeletion.log') 'Production native call must pass a real null destination, not the empty string produced by PowerShell $null conversion.'
 
 $testRoot = Join-Path ([IO.Path]::GetTempPath()) ('ANS-SentinelOneManualCleanupTest-' + [guid]::NewGuid().ToString('N'))
 $script:FirstTarget = Join-Path $testRoot 'FirstRemnant'

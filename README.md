@@ -209,7 +209,9 @@ Locked/inaccessible targets are retained where backup cannot complete; failed
 deletions may be partial. Backed-up files that resist immediate deletion are
 queued using `MoveFileExW(MOVEFILE_DELAY_UNTIL_REBOOT)`, with files before
 directories and directories deepest first. Existing deletion requests are reused;
-unrelated rename/deletion requests are preserved. Queuing does not prove deletion.
+unrelated rename/deletion requests are preserved. The native call passes a true
+NULL destination (PowerShell `$null` alone becomes an empty string for a .NET
+string parameter and does not request deletion). Queuing does not prove deletion.
 `ScheduledForDeletion`, `AlreadyScheduled`, and `ScheduledTargets` report accepted
 requests; `RebootDeletions.json` in the backup directory and the operational log
 record them. `Outcome: RebootDeletionScheduled` requires a reboot and a verification

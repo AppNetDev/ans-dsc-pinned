@@ -272,9 +272,12 @@ namespace ANS.SentinelOneCleanup {
 }
 '@
     }
-    if (-not [ANS.SentinelOneCleanup.NativeMethods]::MoveFileEx($Path, $null, 4)) {
+    # PowerShell coerces $null to an empty string for a .NET string argument.
+    # MoveFileEx requires a real NULL destination to register deletion.
+    if (-not [ANS.SentinelOneCleanup.NativeMethods]::MoveFileEx($Path, [System.Management.Automation.Language.NullString]::Value, 4)) {
         $errorCode = [Runtime.InteropServices.Marshal]::GetLastWin32Error()
-        throw (New-Object ComponentModel.Win32Exception($errorCode))
+        $nativeError = New-Object ComponentModel.Win32Exception($errorCode)
+        throw "MoveFileEx deletion scheduling failed (Win32 $errorCode): $($nativeError.Message)"
     }
 }
 
